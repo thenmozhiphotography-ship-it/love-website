@@ -1,0 +1,3658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOVE - Psychological Assessment & Intervention Tracker</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for Neurocognitive Profiles -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Drive Client APIs -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#bae0fd',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              800: '#1e3a8a',
+              900: '#0d2040',
+            },
+            mint: {
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            },
+            accent: {
+              amber: '#f59e0b',
+              rose: '#f43f5e',
+              indigo: '#6366f1'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-report, #printable-report * {
+        visibility: visible;
+      }
+      #printable-report {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white !important;
+        color: black !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- Application Header -->
+  <header class="bg-brand-900 text-white sticky top-0 z-50 shadow-md border-b border-brand-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & Branding -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="app.navigate('dashboard')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-mint-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+            <i class="fa-solid fa-heart text-xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xl font-bold tracking-tight text-white">LOVE</span>
+              <span class="text-[10px] bg-brand-800 text-brand-200 uppercase px-2 py-0.5 rounded font-semibold tracking-wider border border-brand-700">Clinical Screener & Guide</span>
+            </div>
+            <p class="text-xs text-slate-300 hidden sm:block">Psychological Diagnostics, Adaptive Interventions & Habits</p>
+          </div>
+        </div>
+
+        <!-- Primary Navigation -->
+        <nav class="hidden lg:flex space-x-1">
+          <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 bg-brand-800 text-white">
+            <i class="fa-solid fa-chart-pie text-brand-200"></i>
+            <span>Portal</span>
+          </button>
+          <button onclick="app.navigate('assessments')" id="nav-assessments" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-brand-800/60">
+            <i class="fa-solid fa-clipboard-check text-brand-200"></i>
+            <span>Screeners</span>
+          </button>
+          <button onclick="app.navigate('reports')" id="nav-reports" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-brand-800/60">
+            <i class="fa-solid fa-file-waveform text-brand-200"></i>
+            <span>Diagnostic Report</span>
+          </button>
+          <button onclick="app.navigate('tasks')" id="nav-tasks" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-brand-800/60">
+            <i class="fa-solid fa-list-check text-brand-200"></i>
+            <span>Action Tracker</span>
+            <span id="task-badge" class="ml-1 bg-mint-500 text-brand-900 text-xs px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+          </button>
+          <button onclick="app.navigate('focus')" id="nav-focus" class="nav-btn px-3.5 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-brand-800/60">
+            <i class="fa-solid fa-headphones text-brand-200"></i>
+            <span>Focus Studio</span>
+          </button>
+        </nav>
+
+        <!-- Right Quick Actions -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <button onclick="app.openCrisisModal()" title="24/7 Crisis Support" class="px-2.5 py-1.5 text-xs bg-rose-600/90 hover:bg-rose-600 text-white rounded-lg font-bold transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-life-ring"></i>
+            <span class="hidden sm:inline">Crisis Lines</span>
+          </button>
+          <button onclick="driveBackup.openModal()" title="Google Drive Backup & Cloud Sync" class="px-2.5 py-1.5 text-xs bg-brand-800 hover:bg-brand-700 text-slate-200 rounded-lg border border-brand-700 flex items-center space-x-1.5 transition">
+            <i class="fa-brands fa-google-drive text-amber-400"></i>
+            <span class="hidden sm:inline">Drive Backup</span>
+          </button>
+          <button onclick="app.loadSampleData()" title="Preload Clinical Sample Case" class="px-2.5 py-1.5 text-xs bg-brand-800 hover:bg-brand-700 text-slate-200 rounded-lg border border-brand-700 flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+            <span class="hidden md:inline">Sample Case</span>
+          </button>
+          <button onclick="app.resetAllData()" title="Reset All Data" class="p-2 text-slate-300 hover:text-rose-400 rounded-lg hover:bg-brand-800 transition">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+          <!-- Mobile Menu Toggle -->
+          <button onclick="app.toggleMobileMenu()" class="lg:hidden p-2 text-slate-300 hover:text-white rounded-lg hover:bg-brand-800 transition">
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Bar (Sliding drawer) -->
+    <div id="mobile-menu-drawer" class="lg:hidden hidden border-t border-brand-800 px-4 py-3 bg-brand-900/98 space-y-2">
+      <button onclick="app.navigate('dashboard'); app.toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white bg-brand-800 flex items-center space-x-2">
+        <i class="fa-solid fa-chart-pie w-5 text-brand-300"></i>
+        <span>Portal Home</span>
+      </button>
+      <button onclick="app.navigate('assessments'); app.toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-brand-800 flex items-center space-x-2">
+        <i class="fa-solid fa-clipboard-check w-5 text-brand-300"></i>
+        <span>Screening Batteries (CAARS, JBS, LD, AQ, RIASEC)</span>
+      </button>
+      <button onclick="app.navigate('reports'); app.toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-brand-800 flex items-center space-x-2">
+        <i class="fa-solid fa-file-waveform w-5 text-brand-300"></i>
+        <span>Diagnostic Report &amp; Solutions</span>
+      </button>
+      <button onclick="app.navigate('tasks'); app.toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-brand-800 flex items-center space-x-2">
+        <i class="fa-solid fa-list-check w-5 text-brand-300"></i>
+        <span>Action Tracker &amp; Habits</span>
+      </button>
+      <button onclick="app.navigate('focus'); app.toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-brand-800 flex items-center space-x-2">
+        <i class="fa-solid fa-headphones w-5 text-brand-300"></i>
+        <span>Sensory Focus Studio</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Ethical & Clinical Notice Banner -->
+  <div class="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2 text-xs">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-shield-halved text-amber-600 text-sm"></i>
+        <span><strong>Clinical Disclaimer:</strong> LOVE is a psychological screening, aptitude profiling, and psychoeducational intervention system. It provides preliminary indicators and does not replace formal DSM-5 / ICD-11 neurodevelopmental or psychiatric evaluations by licensed professionals.</span>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" class="text-amber-700 hover:text-amber-950 ml-4 font-bold">×</button>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 opacity-0 translate-y-3 pointer-events-none bg-brand-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 border border-slate-700 text-sm">
+    <div id="toast-icon" class="text-mint-400 text-lg"><i class="fa-solid fa-check-circle"></i></div>
+    <div id="toast-msg">Operation completed successfully.</div>
+  </div>
+
+  <!-- Main Content View Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- VIEW 1: DASHBOARD -->
+    <section id="view-dashboard" class="space-y-6">
+      <!-- Welcome Hero Banner -->
+      <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+          <i class="fa-solid fa-brain text-[240px]"></i>
+        </div>
+        <div class="relative z-10 max-w-3xl">
+          <div class="inline-flex items-center space-x-2 bg-brand-500/30 border border-brand-400/30 px-3 py-1 rounded-full text-xs font-semibold text-mint-400 mb-3">
+            <span class="w-2 h-2 rounded-full bg-mint-400 animate-pulse"></span>
+            <span>Clinical Neurodiversity &amp; Psychoeducational Web Platform</span>
+          </div>
+          <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-2">Empowering Neurodivergent &amp; Human Potential</h1>
+          <p class="text-slate-300 text-sm sm:text-base mb-6 leading-relaxed">
+            Welcome to <strong>LOVE</strong>. Seamlessly screen for <strong>CAARS Adult ADHD</strong>, <strong>Jaswant Bullying Scale (JBS-20)</strong> ecological victimization, <strong>Specific Learning Difficulties</strong> (Dyslexia/Dyscalculia), <strong>Autism Spectrum (AQ)</strong> traits, and <strong>RIASEC Vocational Synergy</strong>. Translate clinical metrics into daily accommodations and synchronized Google Drive backups.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="app.navigate('assessments')" class="bg-mint-500 hover:bg-mint-600 text-brand-900 font-bold px-5 py-2.5 rounded-xl shadow-lg transition flex items-center space-x-2">
+              <i class="fa-solid fa-play"></i>
+              <span>Start Assessment Battery</span>
+            </button>
+            <button onclick="app.navigate('reports')" class="bg-brand-700/80 hover:bg-brand-700 text-white font-medium px-5 py-2.5 rounded-xl border border-brand-600 transition flex items-center space-x-2">
+              <i class="fa-solid fa-file-lines"></i>
+              <span>View Latest Report</span>
+            </button>
+            <button onclick="app.openCrisisModal()" class="bg-slate-800 hover:bg-slate-700 text-rose-300 font-medium px-4 py-2.5 rounded-xl border border-slate-700 transition flex items-center space-x-2">
+              <i class="fa-solid fa-shield-heart text-rose-400"></i>
+              <span>Crisis Support</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Strip -->
+        <!-- Quick Metrics Strip -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs uppercase font-semibold text-slate-500 tracking-wider">Completed Screeners</p>
+              <h3 id="stat-completed-screeners" class="text-2xl font-bold text-slate-800 mt-1">0 / 5</h3>
+              <span id="stat-progress-pct" class="text-xs text-brand-600 font-medium">0% Battery complete</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-brand-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs uppercase font-semibold text-slate-500 tracking-wider">Active Action Tasks</p>
+              <h3 id="stat-active-tasks" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+              <span id="stat-tasks-done" class="text-xs text-emerald-600 font-medium">0 completed</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-square-check"></i>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs uppercase font-semibold text-slate-500 tracking-wider">Plan Adherence</p>
+              <h3 id="stat-adherence-rate" class="text-2xl font-bold text-slate-800 mt-1">0%</h3>
+              <span class="text-xs text-slate-400">Habit fidelity</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs uppercase font-semibold text-slate-500 tracking-wider">Screening Batteries</p>
+              <h3 class="text-2xl font-bold text-slate-800 mt-1">5 Modules</h3>
+              <span class="text-xs text-indigo-600 font-medium">CAARS, JBS, LD, AQ, RIASEC</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+          </div>
+        </div>
+        <!-- Career Card -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- ADHD Card -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-bolt"></i>
+                </span>
+                <span id="badge-adhd" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600">Not Started</span>
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">CAARS Adult ADHD Battery</h3>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                4-Factor subscale assessment (Inattention/Memory, Restlessness, Emotional Lability, &amp; Self-Concept) with standardized clinical T-scores.
+              </p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span id="score-adhd-summary" class="text-xs font-medium text-slate-600">12 Item CAARS</span>
+              <button onclick="app.startAssessment('adhd')" class="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center space-x-1">
+                <span>Assess</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Jaswant Bullying Scale Card -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-shield-cat"></i>
+                </span>
+                <span id="badge-bullying" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600">Not Started</span>
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">Jaswant Bullying Scale</h3>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                20-item ecological screener assessing Peer, Domestic, School Neglect, Community Harassment, and Internalized Distress.
+              </p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span id="score-bullying-summary" class="text-xs font-medium text-slate-600">20 Items (JBS-20)</span>
+              <button onclick="app.startAssessment('bullying')" class="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center space-x-1">
+                <span>Assess</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Learning Disability Card -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-book-open-reader"></i>
+                </span>
+                <span id="badge-ld" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600">Not Started</span>
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">Learning Disability</h3>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                Flags indicators for Dyslexia (phonological processing), Dyscalculia (numerical cognition), and working memory retention.
+              </p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span id="score-ld-summary" class="text-xs font-medium text-slate-600">6 Questions</span>
+              <button onclick="app.startAssessment('ld')" class="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center space-x-1">
+                <span>Assess</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Autism Card -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-puzzle-piece"></i>
+                </span>
+                <span id="badge-autism" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600">Not Started</span>
+              </div>
+              <h3 class="font-bold text-slate-800 text-base">Autism Spectrum (AQ)</h3>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                Screens sensory sensitivities, social communication patterns, routine rigidity, and detail attention (AQ-10 screening model).
+              </p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span id="score-autism-summary" class="text-xs font-medium text-slate-600">6 Questions</span>
+              <button onclick="app.startAssessment('autism')" class="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center space-x-1">
+                <span>Assess</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Career Guidance Banner Module -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-start sm:items-center space-x-3">
+            <span class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-lg flex-shrink-0">
+              <i class="fa-solid fa-compass"></i>
+            </span>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="font-bold text-slate-800 text-base">RIASEC Career Guidance Battery</h3>
+                <span id="badge-career" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600">Not Started</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Discovers vocational Holland codes and maps neurodivergent-friendly professional work environments.</p>
+            </div>
+          </div>
+          <button onclick="app.startAssessment('career')" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 self-start sm:self-auto">
+            <span>Take Career Battery</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+      <!-- Quick Action / Diagnostic Overview Strip -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Summary Chart Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-slate-800">Holistic Psychological &amp; Strengths Profile</h3>
+              <p class="text-xs text-slate-500">Composite likelihood indicators across all completed batteries</p>
+            </div>
+            <button onclick="app.renderRadarChart()" class="text-xs text-brand-600 hover:underline">
+              <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
+            </button>
+          </div>
+          <div class="relative h-64 w-full flex items-center justify-center">
+            <canvas id="overviewRadarChart"></canvas>
+            <div id="chart-fallback" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-center p-4 bg-white/90">
+              <i class="fa-solid fa-chart-radar text-4xl mb-2 text-slate-300"></i>
+              <p class="text-sm font-medium text-slate-600">No Assessment Data Yet</p>
+              <p class="text-xs max-w-xs mt-1">Complete one or more screeners or click "Load Sample Case" above to generate your multidimensional profile.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Recommended Actions Box -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-slate-800 mb-1 flex items-center space-x-2">
+              <i class="fa-solid fa-bullseye text-mint-500"></i>
+              <span>Next Recommended Steps</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Dynamically prioritized based on your active scores</p>
+            <div id="dashboard-suggested-list" class="space-y-3">
+              <!-- Injected dynamically -->
+            </div>
+          </div>
+          <button onclick="app.navigate('tasks')" class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition text-center">
+            Open Habit &amp; Task Tracker &rarr;
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: ASSESSMENTS (INTERACTIVE QUESTIONNAIRES) -->
+    <section id="view-assessments" class="space-y-6 hidden">
+      <!-- Selector Tabs -->
+      <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-2">
+        <button onclick="app.switchAssessmentTab('adhd')" id="tab-adhd" class="assessment-tab-btn flex-1 min-w-[130px] py-2.5 px-3 rounded-lg text-xs font-bold text-brand-900 bg-brand-50 border border-brand-200 flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-bolt text-blue-600"></i>
+          <span>CAARS ADHD</span>
+        </button>
+        <button onclick="app.switchAssessmentTab('bullying')" id="tab-bullying" class="assessment-tab-btn flex-1 min-w-[130px] py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-shield-cat text-rose-600"></i>
+          <span>Jaswant Bullying (JBS)</span>
+        </button>
+        <button onclick="app.switchAssessmentTab('ld')" id="tab-ld" class="assessment-tab-btn flex-1 min-w-[130px] py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-book-open-reader text-emerald-600"></i>
+          <span>Learning Disability</span>
+        </button>
+        <button onclick="app.switchAssessmentTab('autism')" id="tab-autism" class="assessment-tab-btn flex-1 min-w-[130px] py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-puzzle-piece text-indigo-600"></i>
+          <span>Autism (AQ-10)</span>
+        </button>
+        <button onclick="app.switchAssessmentTab('career')" id="tab-career" class="assessment-tab-btn flex-1 min-w-[130px] py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-compass text-amber-600"></i>
+          <span>Career (RIASEC)</span>
+        </button>
+      </div>
+
+      <!-- Assessment Question Form Container -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <!-- Module Header -->
+        <div class="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span id="current-battery-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">Module 1 of 4</span>
+              <span id="current-battery-standard" class="text-xs text-slate-400">Conners' Adult ADHD Rating Scales Protocol</span>
+            </div>
+            <h2 id="current-battery-title" class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">Conners' Adult ADHD Rating Scale (CAARS Multi-Factor)</h2>
+            <p id="current-battery-desc" class="text-xs sm:text-sm text-slate-500 mt-1">
+              Rate each item based on your typical behavioral patterns and experiences.
+            </p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <span class="text-xs text-slate-400" id="form-progress-indicator">0/12 Answered</span>
+            <div class="w-32 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div id="form-progress-bar" class="bg-brand-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Questions List -->
+        <form id="assessment-form" onsubmit="event.preventDefault(); app.submitCurrentAssessment();">
+          <div id="questions-container" class="space-y-6">
+            <!-- Questions rendered via JS -->
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+            <button type="button" onclick="app.clearCurrentForm()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-slate-50 rounded-lg transition">
+              <i class="fa-solid fa-eraser mr-1.5"></i>Reset Answers
+            </button>
+            <div class="flex items-center space-x-3">
+              <button type="submit" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-md transition flex items-center space-x-2">
+                <i class="fa-solid fa-square-check"></i>
+                <span>Score Assessment &amp; Generate Plan</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW 3: DIAGNOSTIC REPORT & SOLUTIONS -->
+    <section id="view-reports" class="space-y-6 hidden">
+      <!-- Printable / Exportable Container -->
+      <div id="printable-report" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 space-y-8">
+        <!-- Report Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-6 gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-brand-600"></span>
+              <span class="text-xs font-bold uppercase tracking-wider text-brand-600">Neuropsychological &amp; Vocational Profile</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Diagnostic Screening &amp; Intervention Report</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Synthesized by LOVE Cognitive Clinical Engine &bull; Generated: <span id="report-date">Today</span></p>
+          </div>
+          <div class="no-print flex items-center space-x-2">
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-print"></i>
+              <span>Print / Save PDF</span>
+            </button>
+            <button onclick="app.exportJsonReport()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg flex items-center space-x-2 transition">
+              <i class="fa-solid fa-download"></i>
+              <span>Export JSON</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary Clinical Gauges -->
+        <div>
+          <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+            <i class="fa-solid fa-gauge-high text-brand-600"></i>
+            <span>Module Risk &amp; Likelihood Summaries</span>
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="report-cards-summary">
+            <!-- Injected via app.renderReport() -->
+          </div>
+        </div>
+
+        <!-- Detailed Diagnostic Findings & Evidence-Based Solutions -->
+        <div class="space-y-6">
+          <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+            <i class="fa-solid fa-brain-circuit text-brand-600"></i>
+            <span>Domain Diagnostics &amp; Individualized Action Plans</span>
+          </h2>
+
+          <div id="report-detailed-sections" class="space-y-6">
+            <!-- Dynamic Sections for ADHD, LD, Autism, and Career -->
+          </div>
+        </div>
+
+        <!-- Career Pathway Specific Section -->
+        <div id="report-career-pathway" class="border-t border-slate-200 pt-6">
+          <!-- Injected dynamically -->
+        </div>
+
+        <!-- Clinical Protocol Sign-off Box -->
+        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 text-xs text-slate-600 space-y-2">
+          <div class="font-bold text-slate-700 flex items-center space-x-1.5">
+            <i class="fa-solid fa-clipboard-user text-slate-500"></i>
+            <span>Recommended Clinical Next Actions</span>
+          </div>
+          <p>
+            If any domain exhibits an <em>Elevated Likelihood</em> or <em>Diagnostic Review Indicated</em>, share this preliminary report with a licensed clinical psychologist, psychiatrist, or educational diagnostician for a formal clinical interview (e.g., DIVA-5 for ADHD, WAIS-IV for cognitive processing, or ADOS-2 for Autism).
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: TASK & BEHAVIORAL HABIT TRACKER -->
+    <section id="view-tasks" class="space-y-6 hidden">
+      <!-- Tracker Header Bar -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-xl font-bold text-slate-800">Behavioral Routine &amp; Accommodation Tracker</h1>
+            <span class="text-xs bg-mint-100 text-mint-800 font-bold px-2 py-0.5 rounded-full">Automated Interventions</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Tasks populated from your diagnostic findings plus personalized executive coping strategies.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="app.populateDefaultTasksFromResults()" class="px-3.5 py-2 bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100 text-xs font-semibold rounded-xl flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-magic-wand-sparkles"></i>
+            <span>Sync Suggested Interventions</span>
+          </button>
+          <button onclick="app.openNewTaskModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Custom Task</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tracker Stats Overview -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 text-center">
+          <span class="text-xs text-slate-400 font-medium uppercase">Total Tasks</span>
+          <p id="tracker-stat-total" class="text-2xl font-bold text-slate-800">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 text-center">
+          <span class="text-xs text-slate-400 font-medium uppercase">Pending</span>
+          <p id="tracker-stat-pending" class="text-2xl font-bold text-amber-600">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 text-center">
+          <span class="text-xs text-slate-400 font-medium uppercase">In Progress</span>
+          <p id="tracker-stat-progress" class="text-2xl font-bold text-brand-600">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 text-center">
+          <span class="text-xs text-slate-400 font-medium uppercase">Completed</span>
+          <p id="tracker-stat-completed" class="text-2xl font-bold text-mint-600">0</p>
+        </div>
+      </div>
+
+      <!-- Filter & Search Toolbar -->
+      <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="text-slate-500 font-medium">Filter Domain:</span>
+          <select id="task-filter-domain" onchange="app.renderTasks()" class="border border-slate-200 rounded-lg px-2.5 py-1.5 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <option value="all">All Domains</option>
+            <option value="adhd">ADHD &amp; Executive</option>
+            <option value="bullying">Bullying &amp; Safe Boundaries</option>
+            <option value="ld">Learning &amp; Study</option>
+            <option value="autism">Autism &amp; Sensory</option>
+            <option value="career">Career &amp; Skills</option>
+            <option value="custom">Custom Routine</option>
+          </select>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-slate-500 font-medium">Status:</span>
+          <select id="task-filter-status" onchange="app.renderTasks()" class="border border-slate-200 rounded-lg px-2.5 py-1.5 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <option value="all">All Statuses</option>
+            <option value="todo">To-Do</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Kanban / List View of Tasks -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Column 1: To Do -->
+        <div class="bg-slate-100/70 p-4 rounded-2xl border border-slate-200 flex flex-col">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <span class="font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+              <span>To-Do Items</span>
+            </span>
+            <span id="col-count-todo" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold">0</span>
+          </div>
+          <div id="task-col-todo" class="space-y-3 flex-1 overflow-y-auto max-h-[600px] pr-1 custom-scrollbar">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Column 2: In Progress -->
+        <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex flex-col">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <span class="font-bold text-xs uppercase tracking-wider text-brand-800 flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse"></span>
+              <span>In Progress</span>
+            </span>
+            <span id="col-count-progress" class="text-xs bg-brand-100 text-brand-800 px-2 py-0.5 rounded-full font-bold">0</span>
+          </div>
+          <div id="task-col-progress" class="space-y-3 flex-1 overflow-y-auto max-h-[600px] pr-1 custom-scrollbar">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Column 3: Completed -->
+        <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 flex flex-col">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <span class="font-bold text-xs uppercase tracking-wider text-emerald-800 flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-mint-500"></span>
+              <span>Completed / Sustained</span>
+            </span>
+            <span id="col-count-done" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">0</span>
+          </div>
+          <div id="task-col-done" class="space-y-3 flex-1 overflow-y-auto max-h-[600px] pr-1 custom-scrollbar">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: NEURODIVERGENT FOCUS STUDIO -->
+    <section id="view-focus" class="space-y-6 hidden">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <!-- Focus Studio Header -->
+        <div class="bg-gradient-to-r from-brand-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="text-center sm:text-left">
+              <div class="inline-flex items-center space-x-2 bg-indigo-500/20 px-3 py-1 rounded-full text-xs text-indigo-200 border border-indigo-400/20 mb-2">
+                <i class="fa-solid fa-brain"></i>
+                <span>Sensory Friendly Executive Focus Room</span>
+              </div>
+              <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Pomodoro &amp; Sound Studio</h1>
+              <p class="text-slate-300 text-xs sm:text-sm mt-1 max-w-lg">
+                Designed for ADHD &amp; ASD minds: chunk tasks with non-jarring interval notifications and synthesized soothing soundscapes.
+              </p>
+            </div>
+            <!-- Timer Circle -->
+            <div class="flex flex-col items-center">
+              <div class="relative w-40 h-40 flex items-center justify-center rounded-full bg-brand-800/80 border-4 border-mint-400/50 shadow-inner">
+                <div class="text-center">
+                  <span id="timer-display" class="text-3xl font-mono font-bold tracking-wider text-white">25:00</span>
+                  <p id="timer-mode-label" class="text-[10px] uppercase font-bold text-mint-400 tracking-wider">Deep Work</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 mt-4">
+                <button id="timer-toggle-btn" onclick="focusStudio.toggleTimer()" class="px-5 py-2 rounded-xl bg-mint-500 hover:bg-mint-600 text-brand-900 font-bold text-xs transition shadow">
+                  Start Focus
+                </button>
+                <button onclick="focusStudio.resetTimer()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Presets and Audio Generator Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Timer Settings -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+              <i class="fa-solid fa-stopwatch text-brand-600"></i>
+              <span>Interval Modulation</span>
+            </h3>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="focusStudio.setDuration(25, 'Deep Work')" class="py-2 px-3 border border-slate-200 rounded-xl hover:border-brand-500 text-xs font-semibold text-slate-700 hover:bg-brand-50 focus:ring-2 focus:ring-brand-500">
+                25m Focus
+              </button>
+              <button onclick="focusStudio.setDuration(5, 'Short Break')" class="py-2 px-3 border border-slate-200 rounded-xl hover:border-brand-500 text-xs font-semibold text-slate-700 hover:bg-brand-50 focus:ring-2 focus:ring-brand-500">
+                5m Break
+              </button>
+              <button onclick="focusStudio.setDuration(15, 'Recovery Break')" class="py-2 px-3 border border-slate-200 rounded-xl hover:border-brand-500 text-xs font-semibold text-slate-700 hover:bg-brand-50 focus:ring-2 focus:ring-brand-500">
+                15m Long
+              </button>
+            </div>
+            <p class="text-xs text-slate-400">
+              *ADHD Tip: If 25 minutes feels too long for hyperfocus regulation, use the 15-minute chunking method with mini-rewards.
+            </p>
+          </div>
+
+          <!-- Ambient Audio Synthesizer (Tone.js / Web Audio API) -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                <i class="fa-solid fa-volume-high text-brand-600"></i>
+                <span>Neurodivergent Soundscape Generator</span>
+              </h3>
+              <span id="audio-indicator" class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Muted</span>
+            </div>
+            <p class="text-xs text-slate-500">Uses internal Web Audio API synthesis for brown noise, white noise, and grounding binaural tones to filter sensory distractions.</p>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="audioGenerator.toggle('brown')" id="btn-sound-brown" class="sound-btn py-2 px-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 flex flex-col items-center">
+                <i class="fa-solid fa-water mb-1 text-amber-700"></i>
+                <span>Brown Noise</span>
+              </button>
+              <button onclick="audioGenerator.toggle('pink')" id="btn-sound-pink" class="sound-btn py-2 px-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 flex flex-col items-center">
+                <i class="fa-solid fa-wind mb-1 text-slate-500"></i>
+                <span>Pink Noise</span>
+              </button>
+              <button onclick="audioGenerator.toggle('tone')" id="btn-sound-tone" class="sound-btn py-2 px-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 flex flex-col items-center">
+                <i class="fa-solid fa-wave-square mb-1 text-indigo-500"></i>
+                <span>432Hz Calm</span>
+              </button>
+            </div>
+            <div class="flex items-center space-x-3 pt-2">
+              <i class="fa-solid fa-volume-low text-slate-400 text-xs"></i>
+              <input type="range" id="sound-volume" min="0" max="1" step="0.05" value="0.4" oninput="audioGenerator.setVolume(this.value)" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+              <i class="fa-solid fa-volume-high text-slate-400 text-xs"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal for Creating/Editing Task -->
+  <div id="task-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-md w-full p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 class="font-bold text-slate-800 text-base" id="task-modal-title">Create Action Plan Task</h3>
+        <button onclick="app.closeTaskModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); app.saveTaskFromModal();" class="space-y-4">
+        <input type="hidden" id="modal-task-id" value="">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Task or Habit Title *</label>
+          <input type="text" id="modal-task-title" required placeholder="e.g., Color-coded reading guide or 15m focus block" class="w-full text-xs border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Target Neuro/Behavioral Domain</label>
+          <select id="modal-task-domain" class="w-full text-xs border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="adhd">ADHD &amp; Executive Function</option>
+            <option value="bullying">Bullying, Safety &amp; Boundaries</option>
+            <option value="ld">Learning &amp; Study Accommodations</option>
+            <option value="autism">Autism &amp; Sensory Grounding</option>
+            <option value="career">Career Development &amp; RIASEC</option>
+            <option value="custom">General Habit</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Priority</label>
+            <select id="modal-task-priority" class="w-full text-xs border border-slate-200 rounded-xl p-2.5">
+              <option value="High">High</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+            <select id="modal-task-status" class="w-full text-xs border border-slate-200 rounded-xl p-2.5">
+              <option value="todo" selected>To-Do</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Intervention Strategy / Notes</label>
+          <textarea id="modal-task-desc" rows="3" placeholder="Add specific tools (e.g. Speechify, earplugs, visual timer)..." class="w-full text-xs border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+        </div>
+        <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="app.closeTaskModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Google Drive Backup & Cloud Sync -->
+  <div id="drive-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+            <i class="fa-brands fa-google-drive"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Google Drive Cloud Backup</h3>
+            <p class="text-[11px] text-slate-500">Backup and restore assessments, CAARS, JBS scores, and tasks</p>
+          </div>
+        </div>
+        <button onclick="driveBackup.closeModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <!-- Auth Status Card -->
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase text-slate-400">Drive Cloud Status</span>
+            <p id="drive-status-text" class="text-xs font-bold text-slate-700 mt-0.5">Not Connected to Google Account</p>
+            <p id="drive-last-sync-text" class="text-[11px] text-slate-400">No previous sync recorded in this session</p>
+          </div>
+          <button id="drive-auth-btn" onclick="driveBackup.handleAuthClick()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-sm transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-key"></i>
+            <span>Connect Drive</span>
+          </button>
+        </div>
+
+        <!-- Sync Actions -->
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="driveBackup.backupToDrive()" id="btn-save-drive" class="p-3 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50 transition flex flex-col items-center justify-center text-center space-y-1">
+            <i class="fa-solid fa-cloud-arrow-up text-brand-600 text-xl"></i>
+            <span class="font-bold text-slate-800">Backup to Drive</span>
+            <span class="text-[10px] text-slate-400">Save `MindBridge_Clinical_Backup.json`</span>
+          </button>
+          <button onclick="driveBackup.restoreFromDrive()" id="btn-restore-drive" class="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition flex flex-col items-center justify-center text-center space-y-1">
+            <i class="fa-solid fa-cloud-arrow-down text-emerald-600 text-xl"></i>
+            <span class="font-bold text-slate-800">Restore from Drive</span>
+            <span class="text-[10px] text-slate-400">Pull latest cloud snapshot</span>
+          </button>
+        </div>
+
+        <!-- Optional Client ID Config (Collapsible/Accordion) -->
+        <div class="border border-slate-200 rounded-xl p-3 bg-white">
+          <div class="flex items-center justify-between cursor-pointer" onclick="document.getElementById('drive-config-panel').classList.toggle('hidden')">
+            <span class="font-bold text-slate-700 text-[11px] flex items-center space-x-1.5">
+              <i class="fa-solid fa-gear text-slate-400"></i>
+              <span>Google API Client Configuration</span>
+            </span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+          </div>
+          <div id="drive-config-panel" class="mt-3 space-y-2 pt-2 border-t border-slate-100 hidden">
+            <p class="text-[11px] text-slate-500 leading-relaxed">
+              To back up directly to your personal Google Cloud console, enter your OAuth 2.0 Web Client ID (from Google Cloud Console &rarr; Credentials).
+            </p>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Google OAuth Client ID</label>
+              <input type="text" id="drive-client-id" placeholder="xxxxxx-xxxxxx.apps.googleusercontent.com" class="w-full border border-slate-200 rounded-lg p-2 text-xs focus:ring-1 focus:ring-brand-500 font-mono">
+            </div>
+            <div class="flex justify-end">
+              <button onclick="driveBackup.saveClientId()" class="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold">Save Client ID</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offline / Local File Backup Alternative -->
+        <div class="border-t border-slate-100 pt-3">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Offline File Backup &amp; Restore</span>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <button onclick="driveBackup.downloadLocalBackup()" class="py-2 px-3 border border-slate-200 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-file-arrow-down text-slate-500"></i>
+              <span>Download File</span>
+            </button>
+            <label class="py-2 px-3 border border-slate-200 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-file-arrow-up text-slate-500"></i>
+              <span>Restore from File</span>
+              <input type="file" accept=".json" onchange="driveBackup.uploadLocalBackup(event)" class="hidden">
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for 24/7 Crisis Support & Hotlines -->
+  <div id="crisis-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Emergency Crisis &amp; Bullying Support</h3>
+            <p class="text-[11px] text-slate-500">Free, confidential support available 24 hours a day, 7 days a week</p>
+          </div>
+        </div>
+        <button onclick="app.closeCrisisModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3 rounded-xl border border-rose-200 bg-rose-50/70">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-rose-900 text-sm">Suicide &amp; Crisis Lifeline (US &amp; Canada)</span>
+              <p class="text-[11px] text-rose-700 mt-0.5">Call or text 988 anytime for immediate emotional support.</p>
+            </div>
+            <a href="tel:988" class="px-3 py-1.5 bg-rose-600 text-white rounded-lg font-bold shadow-sm">Call 988</a>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-slate-800 text-sm">Crisis Text Line</span>
+              <p class="text-[11px] text-slate-500 mt-0.5">Text HOME to 741741 to connect with a volunteer crisis counselor.</p>
+            </div>
+            <a href="sms:741741?body=HOME" class="px-3 py-1.5 bg-slate-800 text-white rounded-lg font-bold">Text 741741</a>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl border border-blue-200 bg-blue-50/70">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-blue-900 text-sm">Bullying &amp; Youth Safety Helpline</span>
+              <p class="text-[11px] text-blue-700 mt-0.5">StopBullying.gov &amp; PACER's National Bullying Prevention Center support.</p>
+            </div>
+            <a href="https://www.stopbullying.gov" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg font-bold">Visit Portal</a>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/70">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-emerald-900 text-sm">International Helplines (Befrienders)</span>
+              <p class="text-[11px] text-emerald-700 mt-0.5">Global directory of telephone emotional support services worldwide.</p>
+            </div>
+            <a href="https://www.befrienders.org" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-bold">Find Center</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+        <button onclick="app.closeCrisisModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-shield-heart text-brand-600"></i>
+        <span>LOVE Assessment & Guidance System &bull; Confidential Client-Side Web Architecture</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button onclick="app.openCrisisModal()" class="text-rose-600 hover:underline font-semibold">Crisis Resources</button>
+        <button onclick="driveBackup.openModal()" class="text-brand-600 hover:underline font-semibold">Drive Backup</button>
+        <button onclick="app.navigate('reports')" class="text-slate-600 hover:underline">Diagnostic Engine</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT APPLICATION CORE LOGIC -->
+  <script>
+    /**
+     * LOVE Assessment & Guidance Core Application
+     * Incorporates CAARS Multi-Subscale Adult ADHD evaluation, Learning Disabilities,
+     * Autism Spectrum (AQ-10), and RIASEC Vocational Guidance.
+     */
+
+    // --- ASSESSMENT DEFINITIONS & BATTERY DATA ---
+    const ASSESSMENT_DEFINITIONS = {
+      adhd: {
+        id: 'adhd',
+        title: "Conners' Adult ADHD Rating Scale (CAARS Multi-Factor)",
+        subtitle: 'Standardized CAARS-S:L 4-Subscale Battery with T-Score Norming',
+        badge: 'Module 1 of 5',
+        scaleType: 'caars_frequency',
+        options: [
+          { text: '0: Not at all, never', value: 0 },
+          { text: '1: Just a little, occasionally', value: 1 },
+          { text: '2: Pretty much, often', value: 2 },
+          { text: '3: Very much, frequently', value: 3 }
+        ],
+        subscaleLabels: {
+          sub_inattention: 'Subscale A: Inattention / Memory & Executive Dysfunction',
+          sub_hyperactivity: 'Subscale B: Hyperactivity / Motor Restlessness',
+          sub_impulsivity: 'Subscale C: Impulsivity / Emotional Lability',
+          sub_selfconcept: 'Subscale D: Problems with Self-Concept / ADHD Index'
+        },
+        questions: [
+          // Subscale A: Inattention / Memory & Executive
+          {
+            id: 'caars_1',
+            text: 'I lose train of thought, misplace vital everyday objects, or lose concentration when doing mental tasks.',
+            subscale: 'sub_inattention',
+            subscaleName: 'Inattention & Memory'
+          },
+          {
+            id: 'caars_2',
+            text: 'I have trouble planning ahead, prioritizing tasks, or structuring multi-step projects logically.',
+            subscale: 'sub_inattention',
+            subscaleName: 'Inattention & Memory'
+          },
+          {
+            id: 'caars_3',
+            text: 'I tend to make careless mistakes or miss fine details even in tasks I know how to perform.',
+            subscale: 'sub_inattention',
+            subscaleName: 'Inattention & Memory'
+          },
+
+          // Subscale B: Hyperactivity / Restlessness
+          {
+            id: 'caars_4',
+            text: 'I feel an inner sense of motor restlessness, feeling compelled to constantly shift positions or tap my limbs.',
+            subscale: 'sub_hyperactivity',
+            subscaleName: 'Hyperactivity & Restlessness'
+          },
+          {
+            id: 'caars_5',
+            text: 'My mind feels like it is "driven by an internal motor," constantly racing from one idea to another without pause.',
+            subscale: 'sub_hyperactivity',
+            subscaleName: 'Hyperactivity & Restlessness'
+          },
+          {
+            id: 'caars_6',
+            text: 'I find it frustrating or physically uncomfortable to sit quietly in prolonged meetings or quiet environments.',
+            subscale: 'sub_hyperactivity',
+            subscaleName: 'Hyperactivity & Restlessness'
+          },
+
+          // Subscale C: Impulsivity / Emotional Lability
+          {
+            id: 'caars_7',
+            text: 'I blurt out responses before others finish their sentences or interrupt conversations without intending to.',
+            subscale: 'sub_impulsivity',
+            subscaleName: 'Impulsivity & Emotional Lability'
+          },
+          {
+            id: 'caars_8',
+            text: 'I have a short fuse, low tolerance for delays/frustrations, or experience rapid swings in emotional frustration.',
+            subscale: 'sub_impulsivity',
+            subscaleName: 'Impulsivity & Emotional Lability'
+          },
+          {
+            id: 'caars_9',
+            text: 'I make hasty commitments, impulsive purchases, or abrupt decisions that I later regret.',
+            subscale: 'sub_impulsivity',
+            subscaleName: 'Impulsivity & Emotional Lability'
+          },
+
+          // Subscale D: Problems with Self-Concept / ADHD Index
+          {
+            id: 'caars_10',
+            text: 'I feel like I chronically underachieve relative to my true intellectual capacity and knowledge.',
+            subscale: 'sub_selfconcept',
+            subscaleName: 'Self-Concept & Efficacy'
+          },
+          {
+            id: 'caars_11',
+            text: 'I struggle with self-blame, feeling disorganized or unreliable compared to my peers or colleagues.',
+            subscale: 'sub_selfconcept',
+            subscaleName: 'Self-Concept & Efficacy'
+          },
+          {
+            id: 'caars_12',
+            text: 'My past educational or work performance has been heavily penalized due to inconsistent focus or missed deadlines.',
+            subscale: 'sub_selfconcept',
+            subscaleName: 'Self-Concept & Efficacy'
+          }
+        ]
+      },
+      bullying: {
+        id: 'bullying',
+        title: 'Jaswant Bullying Scale (JBS-20)',
+        subtitle: 'Comprehensive 5-Ecological Domain Harassment & Victimization Battery',
+        badge: 'Module 2 of 5',
+        scaleType: 'frequency_5',
+        options: [
+          { text: '0: Never / Not at all', value: 0 },
+          { text: '1: Rarely / Once in a while', value: 1 },
+          { text: '2: Sometimes', value: 2 },
+          { text: '3: Often', value: 3 },
+          { text: '4: Constantly / Almost Always', value: 4 }
+        ],
+        subscaleLabels: {
+          sub_internalized: 'Domain 1: Internalized Distress & Hypervigilance',
+          sub_peer: 'Domain 2: Peer & Social Exclusion / Cyberbullying',
+          sub_domestic: 'Domain 3: Familial & Domestic Humiliation',
+          sub_school: 'Domain 4: School Environment & Institutional Neglect',
+          sub_community: 'Domain 5: Community & Neighborhood Harassment'
+        },
+        questions: [
+          // Domain 1: Internalized Distress & Hypervigilance
+          {
+            id: 'jbs_1',
+            text: 'I feel insecure or constantly worried that someone is going to mock or hurt me.',
+            subscale: 'sub_internalized',
+            subscaleName: 'Internalized Distress'
+          },
+          {
+            id: 'jbs_2',
+            text: 'I change how I dress, talk, or walk so that others will not target or tease me.',
+            subscale: 'sub_internalized',
+            subscaleName: 'Internalized Distress'
+          },
+          {
+            id: 'jbs_3',
+            text: 'I blame myself when people treat me poorly or make fun of me.',
+            subscale: 'sub_internalized',
+            subscaleName: 'Internalized Distress'
+          },
+          {
+            id: 'jbs_4',
+            text: 'I feel anxious, sad, or have physical symptoms (stomachaches/headaches) due to mistreatment.',
+            subscale: 'sub_internalized',
+            subscaleName: 'Internalized Distress'
+          },
+
+          // Domain 2: Peer & Social Exclusion / Cyberbullying
+          {
+            id: 'jbs_5',
+            text: 'Other kids call me mean names, mock my appearance, or insult me.',
+            subscale: 'sub_peer',
+            subscaleName: 'Peer & Cyber Harassment'
+          },
+          {
+            id: 'jbs_6',
+            text: 'Friends or classmates deliberately exclude me from group chats, games, or social plans.',
+            subscale: 'sub_peer',
+            subscaleName: 'Peer & Cyber Harassment'
+          },
+          {
+            id: 'jbs_7',
+            text: 'Peers spread false rumors or embarrassing pictures/posts about me online or offline.',
+            subscale: 'sub_peer',
+            subscaleName: 'Peer & Cyber Harassment'
+          },
+          {
+            id: 'jbs_8',
+            text: 'Other kids threaten to harm me, take my belongings, or force me to do things I don\'t want to do.',
+            subscale: 'sub_peer',
+            subscaleName: 'Peer & Cyber Harassment'
+          },
+
+          // Domain 3: Familial & Domestic Humiliation
+          {
+            id: 'jbs_9',
+            text: 'Siblings or family members repeatedly tease, belittle, or humiliate me at home.',
+            subscale: 'sub_domestic',
+            subscaleName: 'Domestic / Family Environment'
+          },
+          {
+            id: 'jbs_10',
+            text: 'I feel unsafe or emotionally attacked by people inside my own home.',
+            subscale: 'sub_domestic',
+            subscaleName: 'Domestic / Family Environment'
+          },
+          {
+            id: 'jbs_11',
+            text: 'My family compares me harshly to others or makes me feel like a burden.',
+            subscale: 'sub_domestic',
+            subscaleName: 'Domestic / Family Environment'
+          },
+          {
+            id: 'jbs_12',
+            text: 'When I ask for help regarding mistreatment, family members dismiss or punish me.',
+            subscale: 'sub_domestic',
+            subscaleName: 'Domestic / Family Environment'
+          },
+
+          // Domain 4: School Environment & Institutional Neglect
+          {
+            id: 'jbs_13',
+            text: 'I avoid specific school areas (hallways, restrooms, cafeteria, buses) out of fear of bullies.',
+            subscale: 'sub_school',
+            subscaleName: 'School / Institutional Safety'
+          },
+          {
+            id: 'jbs_14',
+            text: 'Students push, hit, trip, or physically intimidate me on school property.',
+            subscale: 'sub_school',
+            subscaleName: 'School / Institutional Safety'
+          },
+          {
+            id: 'jbs_15',
+            text: 'Teachers or school staff witness me being picked on but ignore it or fail to intervene.',
+            subscale: 'sub_school',
+            subscaleName: 'School / Institutional Safety'
+          },
+          {
+            id: 'jbs_16',
+            text: 'I consider skipping classes or staying home from school to avoid harassment.',
+            subscale: 'sub_school',
+            subscaleName: 'School / Institutional Safety'
+          },
+
+          // Domain 5: Community & Neighborhood Harassment
+          {
+            id: 'jbs_17',
+            text: 'People in my neighborhood or local parks harass, intimidate, or follow me.',
+            subscale: 'sub_community',
+            subscaleName: 'Community & Public Safety'
+          },
+          {
+            id: 'jbs_18',
+            text: 'I feel unsafe walking to the store, bus stop, or playground in my local area.',
+            subscale: 'sub_community',
+            subscaleName: 'Community & Public Safety'
+          },
+          {
+            id: 'jbs_19',
+            text: 'Older youth or community members target me because of my family, background, or identity.',
+            subscale: 'sub_community',
+            subscaleName: 'Community & Public Safety'
+          },
+          {
+            id: 'jbs_20',
+            text: 'I have experienced vandalism, damage to my bike/belongings, or threats in public spaces.',
+            subscale: 'sub_community',
+            subscaleName: 'Community & Public Safety'
+          }
+        ]
+      },
+      ld: {
+        id: 'ld',
+        title: 'Learning Disability & Processing Indicator',
+        subtitle: 'Dyslexia, Dyscalculia & Working Memory Cognitive Screener',
+        badge: 'Module 3 of 5',
+        scaleType: 'frequency',
+        options: [
+          { text: 'Never / Not at all', value: 0 },
+          { text: 'Slightly / Mild', value: 1 },
+          { text: 'Moderate Difficulty', value: 2 },
+          { text: 'Frequent Difficulty', value: 3 },
+          { text: 'Severe / Constant', value: 4 }
+        ],
+        questions: [
+          {
+            id: 'ld_1',
+            text: 'Do you find words "blurring", reversing letters (b/d, p/q), or needing to re-read dense paragraphs multiple times to comprehend?',
+            subscale: 'dyslexia'
+          },
+          {
+            id: 'ld_2',
+            text: 'Do you struggle with mental arithmetic, calculating tips, reading analog clocks, or estimating time requirements?',
+            subscale: 'dyscalculia'
+          },
+          {
+            id: 'ld_3',
+            text: 'When given multi-step verbal instructions, do you lose track halfway through without written cues?',
+            subscale: 'working_memory'
+          },
+          {
+            id: 'ld_4',
+            text: 'Do you experience prolonged mental exhaustion or headaches after brief reading or data entry sessions?',
+            subscale: 'visual_processing'
+          },
+          {
+            id: 'ld_5',
+            text: 'Do you confuse left/right, directional navigation, or sequencing steps in long algorithmic processes?',
+            subscale: 'spatial_processing'
+          },
+          {
+            id: 'ld_6',
+            text: 'Is there a marked gap between how articulate you are speaking versus what you can comfortably write down?',
+            subscale: 'dysgraphia'
+          }
+        ]
+      },
+      autism: {
+        id: 'autism',
+        title: 'Autism Spectrum Screener (AQ-10 Protocol)',
+        subtitle: 'Social Communication, Sensory Processing & Routine Sensitivity',
+        badge: 'Module 4 of 5',
+        scaleType: 'agreement',
+        options: [
+          { text: 'Definitely Disagree', value: 0 },
+          { text: 'Slightly Disagree', value: 1 },
+          { text: 'Slightly Agree', value: 2 },
+          { text: 'Definitely Agree', value: 3 }
+        ],
+        questions: [
+          {
+            id: 'asd_1',
+            text: 'I often notice small sounds or background hums that others do not seem to notice.',
+            subscale: 'sensory'
+          },
+          {
+            id: 'asd_2',
+            text: 'When reading or working, I usually concentrate on the whole picture rather than small details.',
+            reverse: true,
+            subscale: 'detail_focus'
+          },
+          {
+            id: 'asd_3',
+            text: 'In a social group, I can easily keep track of several different people’s conversations without feeling overwhelmed.',
+            reverse: true,
+            subscale: 'social_processing'
+          },
+          {
+            id: 'asd_4',
+            text: 'I find it easy to "read between the lines" and detect hidden social subtext or sarcasm when someone is talking to me.',
+            reverse: true,
+            subscale: 'social_communication'
+          },
+          {
+            id: 'asd_5',
+            text: 'I get intensely distressed or dysregulated if my daily routine or planned schedule is unexpectedly disrupted.',
+            subscale: 'routine_rigidity'
+          },
+          {
+            id: 'asd_6',
+            text: 'I have passionate, deep special interests that I could immerse myself in for hours without noticing time pass.',
+            subscale: 'hyperfocus'
+          }
+        ]
+      },
+      career: {
+        id: 'career',
+        title: 'Career Guidance Inventory (RIASEC Holland Model)',
+        subtitle: 'Vocational Strengths & Neuro-Compatible Work Alignment',
+        badge: 'Module 5 of 5',
+        scaleType: 'interest',
+        options: [
+          { text: 'Strong Dislike (1)', value: 1 },
+          { text: 'Neutral / Indifferent (2)', value: 2 },
+          { text: 'Moderate Interest (3)', value: 3 },
+          { text: 'Strong Affinity / Passion (4)', value: 4 }
+        ],
+        questions: [
+          {
+            id: 'car_r',
+            text: 'Realistic: Working with tools, hardware, physical systems, outdoor work, or engineering machinery.',
+            subscale: 'Realistic'
+          },
+          {
+            id: 'car_i',
+            text: 'Investigative: Analyzing complex scientific problems, conducting data research, or deep programming logic.',
+            subscale: 'Investigative'
+          },
+          {
+            id: 'car_a',
+            text: 'Artistic: Creative writing, UX/visual design, musical creation, or non-linear lateral problem solving.',
+            subscale: 'Artistic'
+          },
+          {
+            id: 'car_s',
+            text: 'Social: Mentoring, counseling, teaching individuals, or collaborative community healthcare.',
+            subscale: 'Social'
+          },
+          {
+            id: 'car_e',
+            text: 'Enterprising: Leading projects, pitching startups, negotiations, and entrepreneurial strategy.',
+            subscale: 'Enterprising'
+          },
+          {
+            id: 'car_c',
+            text: 'Conventional: Structured data organization, compliance auditing, documentation, and system administration.',
+            subscale: 'Conventional'
+          }
+        ]
+      }
+    };
+
+    // --- INTERVENTION KNOWLEDGE BASE ---
+    const INTERVENTIONS_CATALOG = {
+      adhd: {
+        mild: {
+          level: 'Typical / Subclinical Range (T < 60)',
+          color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+          badgeColor: 'bg-emerald-100 text-emerald-800',
+          summary: 'CAARS profiles demonstrate normative cognitive regulation. Periodic executive fatigue can be supported through baseline time-blocking.',
+          interventions: [
+            { title: 'Time-Boxing & Buffer Blocks', desc: 'Add 15-minute buffers between calendar events to mitigate transition friction.', priority: 'Medium' },
+            { title: 'Digital Clutter Sweep', desc: 'Use tab organizers to prevent working memory overload during research sessions.', priority: 'Low' }
+          ]
+        },
+        moderate: {
+          level: 'Slightly Elevated / Borderline (T 60-64)',
+          color: 'text-amber-800 bg-amber-50 border-amber-200',
+          badgeColor: 'bg-amber-100 text-amber-800',
+          summary: 'Elevations noted in specific CAARS subscales. Working memory and task initiation demonstrate vulnerability during periods of stress.',
+          interventions: [
+            { title: '10-Minute Visual Declutter Before Work Sprint', desc: 'Clear field of view to minimize visual distraction triggers before complex tasks.', priority: 'High' },
+            { title: 'External Brain & Quick-Capture Notebook', desc: 'Keep a physical tactile ledger next to your workstation to offload intrusive impulses immediately.', priority: 'High' },
+            { title: 'Sensory Output Pacing & Stand-Up Transitions', desc: 'Utilize sit-stand desks or tactile squeeze tools during long audio/video meetings.', priority: 'Medium' }
+          ]
+        },
+        elevated: {
+          level: 'Elevated / High Likelihood (T ≥ 65 - Clinical Review Indicated)',
+          color: 'text-rose-800 bg-rose-50 border-rose-200',
+          badgeColor: 'bg-rose-100 text-rose-800',
+          summary: 'Multi-factor CAARS clinical elevations indicating marked executive dysfunction, restlessness, or emotional impulsivity. Comprehensive diagnostic interview (DIVA-5) recommended.',
+          interventions: [
+            { title: 'Formal CAARS / DIVA-5 Diagnostic Consultation', desc: 'Present these subscale T-scores to an adult ADHD psychiatrist for clinical evaluation & pharmacotherapy assessment.', priority: 'High' },
+            { title: 'Dialectical Stop-Reflect Routine (Impulsivity Cooling)', desc: 'Adopt a mandatory 90-second pause protocol before replying in contentious or high-urgency interactions.', priority: 'High' },
+            { title: 'Cognitive Restructuring for Self-Concept', desc: 'Reframe perceived moral failure as neurobiological executive dysregulation; engage in neuro-affirming CBT.', priority: 'High' },
+            { title: 'Externalized Executive Scaffolding', desc: 'Implement multi-sensory alarms, visual clocks (Time Timer), and automated redundancy systems.', priority: 'Medium' }
+          ]
+        }
+      },
+      bullying: {
+        minimal: {
+          level: 'Minimal Exposure / Safe Baseline (Score 0-15)',
+          color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+          badgeColor: 'bg-emerald-100 text-emerald-800',
+          summary: 'Jaswant Bullying Scale metrics indicate low systemic victimization across peer, domestic, school, and neighborhood ecosystems.',
+          interventions: [
+            { title: 'Proactive Boundary Maintenance', desc: 'Reinforce assertive refusal skills and maintain supportive friendships.', priority: 'Low' },
+            { title: 'Digital Footprint Privacy Audit', desc: 'Review social media visibility settings and keep location tagging private.', priority: 'Low' }
+          ]
+        },
+        mild: {
+          level: 'Mild / Intermittent Harassment Risk (Score 16-32)',
+          color: 'text-amber-800 bg-amber-50 border-amber-200',
+          badgeColor: 'bg-amber-100 text-amber-800',
+          summary: 'Occasional teasing, social exclusion, or hypervigilance detected. Early boundary intervention will prevent chronic trauma internalization.',
+          interventions: [
+            { title: 'Objective Incident Timestamp Log', desc: 'Record date, participants, screenshots, and exact words of any teasing or exclusion.', priority: 'Medium' },
+            { title: 'Somatic Reset for Anticipatory Anxiety', desc: 'Practice 4-7-8 parasympathetic diaphragmatic breathing before entering high-social friction zones.', priority: 'Medium' },
+            { title: 'Peer Ally Identification Plan', desc: 'Identify two trusted peers or study partners to walk with through shared hallways or cafeterias.', priority: 'Medium' }
+          ]
+        },
+        moderate: {
+          level: 'Moderate Victimization & Systemic Strain (Score 33-50)',
+          color: 'text-orange-800 bg-orange-50 border-orange-200',
+          badgeColor: 'bg-orange-100 text-orange-800',
+          summary: 'Notable multi-domain intimidation, exclusion, or domestic distress. Immediate structural documentation and adult intervention needed.',
+          interventions: [
+            { title: 'Confidential School Counselor / HR Safety Liaison', desc: 'Schedule a formal meeting with an academic counselor or administrator using your incident logs.', priority: 'High' },
+            { title: 'Cyber Harassment Lockdown & Evidence Archive', desc: 'Screenshot abusive messages, export group chat logs, block perpetrators, and restrict direct messages.', priority: 'High' },
+            { title: 'Alternative Safe Transition Routes', desc: 'Identify monitored, well-lit travel corridors between classes, buses, and public spots.', priority: 'High' },
+            { title: 'De-escalation & Firm Scripting Repertoire', desc: 'Practice clear, unemotional scripts ("Stop speaking to me like that, this is recorded") to disengage without escalation.', priority: 'Medium' }
+          ]
+        },
+        elevated: {
+          level: 'Severe Victimization & Ecological Threat (Score 51-80 - Safety Protocol)',
+          color: 'text-rose-800 bg-rose-50 border-rose-200',
+          badgeColor: 'bg-rose-100 text-rose-800',
+          summary: 'Critical levels of chronic harassment, domestic attack, institutional neglect, or physical endangerment. Requires urgent multi-tiered safety intervention.',
+          interventions: [
+            { title: 'Immediate Institutional Safety & Protection Plan', desc: 'Demand an emergency meeting with head administration or student ombudsman for a written non-contact safety contract.', priority: 'High' },
+            { title: 'Domestic Sanctuary & Emergency Helpline Identification', desc: 'Identify safe physical spaces and save local youth/domestic crisis hotlines (e.g., 988 or local child safety lines).', priority: 'High' },
+            { title: 'Trauma-Informed Clinical Therapy Intake', desc: 'Consult a licensed psychologist for EMDR or trauma-focused cognitive therapy to treat hypervigilance and self-blame.', priority: 'High' },
+            { title: 'Community Transit Buddy Protocol', desc: 'Never travel through high-risk neighborhood transit spots alone; coordinate pick-ups with guardians or trusted allies.', priority: 'High' }
+          ]
+        }
+      },
+      ld: {
+        mild: {
+          level: 'Typical Cognitive Processing',
+          color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+          badgeColor: 'bg-emerald-100 text-emerald-800',
+          summary: 'Information processing, phonological parsing, and numerical calculations show standard functionality.',
+          interventions: [
+            { title: 'Active Recall Strategies', desc: 'Utilize spaced repetition flashcards for complex technical terminology.', priority: 'Low' }
+          ]
+        },
+        moderate: {
+          level: 'Moderate Learning & Working Memory Asymmetry',
+          color: 'text-amber-800 bg-amber-50 border-amber-200',
+          badgeColor: 'bg-amber-100 text-amber-800',
+          summary: 'Indicators of reading fatigue, numerical calculation friction, or working memory lag under cognitive pressure.',
+          interventions: [
+            { title: 'Text-to-Speech Assistive Reading', desc: 'Install Speechify or Readwise to listen to technical documentation while reading along.', priority: 'High' },
+            { title: 'Dyslexia-Friendly Fonts & Contrast', desc: 'Set digital readers to OpenDyslexic or Atkinson Hyperlegible fonts with warm page tinting.', priority: 'Medium' },
+            { title: 'Visual Mind-Mapping Over Dense Text', desc: 'Synthesize complex outlines using visual tools (Miro, Obsidian Canvas) rather than pure prose.', priority: 'Medium' }
+          ]
+        },
+        elevated: {
+          level: 'Significant Specific Learning Difficulty Indicator',
+          color: 'text-rose-800 bg-rose-50 border-rose-200',
+          badgeColor: 'bg-rose-100 text-rose-800',
+          summary: 'High probability of specific learning differences (e.g., Dyslexia, Dyscalculia, or slow processing speed). Formal psychoeducational evaluation recommended.',
+          interventions: [
+            { title: 'Psychoeducational Diagnostic Assessment', desc: 'Obtain formal WAIS/WJ testing for academic and professional workplace accommodations.', priority: 'High' },
+            { title: 'Full Assistive Technology Suite', desc: 'Adopt speech-to-text dictation (Wispr Flow / Dragon) and financial calculation apps.', priority: 'High' },
+            { title: 'Extended Time & Chunked Exam/Work Accommodations', desc: 'Request 1.5x time allowances and written instructions for all professional assignments.', priority: 'High' },
+            { title: 'Color-Coded Numerical & Step Tracking', desc: 'Color-code multi-digit mathematical formulas or code steps to prevent line jumping.', priority: 'Medium' }
+          ]
+        }
+      },
+      autism: {
+        mild: {
+          level: 'Neurotypical / Low Autistic Traits',
+          color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+          badgeColor: 'bg-emerald-100 text-emerald-800',
+          summary: 'Responses reflect standard sensory thresholds and comfort with shifting social ambiguity and unstructured change.',
+          interventions: [
+            { title: 'Clear Communication Norms', desc: 'Continue utilizing direct, empathetic communication in team settings.', priority: 'Low' }
+          ]
+        },
+        moderate: {
+          level: 'Moderate Sensory / Broad Autism Phenotype',
+          color: 'text-amber-800 bg-amber-50 border-amber-200',
+          badgeColor: 'bg-amber-100 text-amber-800',
+          summary: 'Noticeable sensory sensitivity and preference for predictability. May experience cognitive depletion in loud, socially ambiguous settings.',
+          interventions: [
+            { title: 'Sensory Decompression Sanctuary', desc: 'Establish a designated quiet space with dimmed 2700K lighting for post-meeting recovery.', priority: 'High' },
+            { title: 'Explicit Agenda Requests', desc: 'Advocate for meeting agendas 24 hours in advance to reduce spontaneous social masking strain.', priority: 'Medium' },
+            { title: 'Sensory Attenuation Earplugs', desc: 'Keep high-fidelity earplugs (Loop Quiet / Engage) on hand in crowded acoustic environments.', priority: 'Medium' }
+          ]
+        },
+        elevated: {
+          level: 'Elevated Autism Spectrum Traits (AQ-10 Review)',
+          color: 'text-rose-800 bg-rose-50 border-rose-200',
+          badgeColor: 'bg-rose-100 text-rose-800',
+          summary: 'High concordance with autism spectrum traits: sensory overload, intense hyperfocus interests, and distinct social communication preferences.',
+          interventions: [
+            { title: 'Comprehensive Diagnostic Clarification', desc: 'Pursue an adult neuro-affirming autism evaluation (e.g., ADOS-2 or MIGDAS-2).', priority: 'High' },
+            { title: 'Neuro-Affirming Workplace/Study Accommodations', desc: 'Request asynchronous communication channels (Slack/Email) over spontaneous cold-calling.', priority: 'High' },
+            { title: 'Sensory Diet & Scheduled Reset Blocks', desc: 'Schedule compulsory 15-minute sensory breaks after 90 minutes of high stimulation.', priority: 'High' },
+            { title: 'Leveraging Deep Subject Mastery (Monotropism)', desc: 'Structure your career or academic thesis around your passionate special interest areas.', priority: 'Medium' }
+          ]
+        }
+      }
+    };
+
+    // --- APPLICATION STATE MANAGEMENT ---
+    const appState = {
+      activeView: 'dashboard',
+      activeAssessmentId: 'adhd',
+      assessments: {
+        adhd: { 
+          answers: {}, 
+          completed: false, 
+          score: 0, 
+          level: 'Not Started',
+          subscales: {
+            sub_inattention: { raw: 0, tScore: 50 },
+            sub_hyperactivity: { raw: 0, tScore: 50 },
+            sub_impulsivity: { raw: 0, tScore: 50 },
+            sub_selfconcept: { raw: 0, tScore: 50 }
+          },
+          subtype: 'Pending Evaluation'
+        },
+        bullying: {
+          answers: {},
+          completed: false,
+          score: 0,
+          level: 'Not Started',
+          subscales: {
+            sub_internalized: { raw: 0, max: 16 },
+            sub_peer: { raw: 0, max: 16 },
+            sub_domestic: { raw: 0, max: 16 },
+            sub_school: { raw: 0, max: 16 },
+            sub_community: { raw: 0, max: 16 }
+          },
+          safetyAlert: false
+        },
+        ld: { answers: {}, completed: false, score: 0, level: 'Not Started' },
+        autism: { answers: {}, completed: false, score: 0, level: 'Not Started' },
+        career: { answers: {}, completed: false, score: 0, topThemes: [] }
+      },
+      tasks: [],
+      focusSession: {
+        duration: 25 * 60,
+        timeLeft: 25 * 60,
+        isRunning: false,
+        timerId: null,
+        mode: 'Deep Work'
+      }
+    };
+
+    // --- LOCAL STORAGE PERSISTENCE ---
+    const STORAGE_KEY = 'mindbridge_data_v1';
+    const GOOGLE_CLIENT_ID_KEY = 'mindbridge_gdrive_client_id';
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          assessments: appState.assessments,
+          tasks: appState.tasks
+        }));
+      } catch (e) {
+        console.warn('Storage save failed', e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.assessments) appState.assessments = parsed.assessments;
+          if (parsed.tasks) appState.tasks = parsed.tasks;
+        }
+      } catch (e) {
+        console.warn('Storage read failed', e);
+      }
+    }
+
+    // --- MAIN APP CONTROLLER ---
+    const app = {
+      init() {
+        loadState();
+        this.renderAssessmentForm('adhd');
+        this.updateDashboardStats();
+        this.renderTasks();
+        this.renderReport();
+        this.setupNavigation();
+      },
+
+      showToast(message, icon = 'fa-check-circle', isError = false) {
+        const toast = document.getElementById('toast');
+        const msg = document.getElementById('toast-msg');
+        const iconContainer = document.getElementById('toast-icon');
+
+        msg.textContent = message;
+        iconContainer.innerHTML = `<i class="fa-solid ${icon} ${isError ? 'text-rose-400' : 'text-mint-400'}"></i>`;
+        
+        toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+        toast.classList.add('opacity-100', 'translate-y-0');
+
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+          toast.classList.remove('opacity-100', 'translate-y-0');
+        }, 3200);
+      },
+
+      setupNavigation() {
+        // Handle responsive nav
+      },
+
+      toggleMobileMenu() {
+        const menu = document.getElementById('mobile-menu-drawer');
+        if (menu) {
+          menu.classList.toggle('hidden');
+        }
+      },
+
+      openCrisisModal() {
+        const modal = document.getElementById('crisis-modal');
+        if (modal) modal.classList.remove('hidden');
+      },
+
+      closeCrisisModal() {
+        const modal = document.getElementById('crisis-modal');
+        if (modal) modal.classList.add('hidden');
+      },
+
+      navigate(viewId) {
+        appState.activeView = viewId;
+        const views = ['dashboard', 'assessments', 'reports', 'tasks', 'focus'];
+        views.forEach(v => {
+          const el = document.getElementById(`view-${v}`);
+          if (el) {
+            if (v === viewId) {
+              el.classList.remove('hidden');
+            } else {
+              el.classList.add('hidden');
+            }
+          }
+
+          // Desktop nav styling
+          const navBtn = document.getElementById(`nav-${v}`);
+          if (navBtn) {
+            if (v === viewId) {
+              navBtn.classList.add('bg-brand-800', 'text-white');
+              navBtn.classList.remove('text-slate-300');
+            } else {
+              navBtn.classList.remove('bg-brand-800', 'text-white');
+              navBtn.classList.add('text-slate-300');
+            }
+          }
+
+          // Mobile nav styling
+          const mobileBtns = document.querySelectorAll(`[data-view="${v}"]`);
+          mobileBtns.forEach(btn => {
+            if (v === viewId) {
+              btn.classList.add('bg-brand-800', 'text-white');
+              btn.classList.remove('text-slate-300');
+            } else {
+              btn.classList.remove('bg-brand-800', 'text-white');
+              btn.classList.add('text-slate-300');
+            }
+          });
+        });
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (viewId === 'dashboard') {
+          this.updateDashboardStats();
+          setTimeout(() => this.renderRadarChart(), 100);
+        } else if (viewId === 'reports') {
+          this.renderReport();
+        } else if (viewId === 'tasks') {
+          this.renderTasks();
+        }
+      },
+
+      // --- ASSESSMENTS CONTROLLER ---
+      startAssessment(batteryId) {
+        this.navigate('assessments');
+        this.switchAssessmentTab(batteryId);
+      },
+
+      switchAssessmentTab(batteryId) {
+        appState.activeAssessmentId = batteryId;
+        // update tab highlights
+        ['adhd', 'bullying', 'ld', 'autism', 'career'].forEach(id => {
+          const tab = document.getElementById(`tab-${id}`);
+          if (tab) {
+            if (id === batteryId) {
+              tab.className = 'assessment-tab-btn flex-1 min-w-[130px] py-2.5 px-3 rounded-lg text-xs font-bold text-brand-900 bg-brand-50 border border-brand-200 flex items-center justify-center space-x-2 transition shadow-sm';
+            } else {
+              tab.className = 'assessment-tab-btn flex-1 min-w-[130px] py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center space-x-2 transition';
+            }
+          }
+        });
+
+        this.renderAssessmentForm(batteryId);
+      },
+
+      renderAssessmentForm(batteryId) {
+        const def = ASSESSMENT_DEFINITIONS[batteryId];
+        if (!def) return;
+
+        const container = document.getElementById('questions-container');
+        if (!container) return;
+
+        document.getElementById('current-battery-badge').textContent = def.badge;
+        document.getElementById('current-battery-standard').textContent = def.subtitle;
+        document.getElementById('current-battery-title').textContent = def.title;
+        document.getElementById('current-battery-desc').textContent = 
+          batteryId === 'adhd'
+            ? "Conners' Adult ADHD Rating Scales (CAARS) 4-Point Likert Scale: 0 = Not at all, 1 = Just a little, 2 = Pretty much, 3 = Very much."
+            : batteryId === 'bullying'
+              ? 'Jaswant Bullying Scale (JBS-20) 5-Point Likert Scale: 0 = Never / Not at all, 1 = Rarely, 2 = Sometimes, 3 = Often, 4 = Constantly / Almost Always.'
+              : batteryId === 'career' 
+                ? 'Rate your level of genuine affinity or enjoyment for each domain to generate your vocational Holland code:'
+                : 'Select how accurately each item reflects your typical experience:';
+        container.innerHTML = '';
+
+        const storedAnswers = appState.assessments[batteryId].answers || {};
+
+        def.questions.forEach((q, idx) => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'p-5 rounded-xl border border-slate-200/80 hover:border-brand-200 transition bg-slate-50/50';
+
+          let optionsHtml = '';
+          def.options.forEach(opt => {
+            const isChecked = storedAnswers[q.id] === opt.value;
+            optionsHtml += `
+              <label class="flex items-center space-x-2 cursor-pointer p-2.5 rounded-lg border text-xs font-medium transition ${
+                isChecked ? 'bg-brand-50 border-brand-500 text-brand-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+              }">
+                <input type="radio" name="${q.id}" value="${opt.value}" ${isChecked ? 'checked' : ''} 
+                  onchange="app.handleAnswerSelect('${batteryId}', '${q.id}', ${opt.value})" 
+                  class="text-brand-600 focus:ring-brand-500 h-4 w-4">
+                <span>${opt.text}</span>
+              </label>
+            `;
+          });
+
+          itemDiv.innerHTML = `
+            <div class="flex items-start space-x-3 mb-3">
+              <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-800 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">${idx + 1}</span>
+              <div>
+                <p class="text-sm font-semibold text-slate-800 leading-snug">${q.text}</p>
+                <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Subscale: ${q.subscaleName || q.subscale}</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-${def.options.length > 4 ? '5' : '4'} gap-2 pl-9">
+              ${optionsHtml}
+            </div>
+          `;
+          container.appendChild(itemDiv);
+        });
+
+        this.updateFormProgress(batteryId);
+      },
+
+      handleAnswerSelect(batteryId, questionId, value) {
+        if (!appState.assessments[batteryId].answers) {
+          appState.assessments[batteryId].answers = {};
+        }
+        appState.assessments[batteryId].answers[questionId] = Number(value);
+        this.updateFormProgress(batteryId);
+        // re-render current questions to update highlight styling
+        this.renderAssessmentForm(batteryId);
+        saveState();
+      },
+
+      updateFormProgress(batteryId) {
+        const def = ASSESSMENT_DEFINITIONS[batteryId];
+        const answers = appState.assessments[batteryId].answers || {};
+        const answeredCount = Object.keys(answers).length;
+        const totalCount = def.questions.length;
+        const pct = Math.round((answeredCount / totalCount) * 100);
+
+        document.getElementById('form-progress-indicator').textContent = `${answeredCount}/${totalCount} Answered`;
+        document.getElementById('form-progress-bar').style.width = `${pct}%`;
+      },
+
+      clearCurrentForm() {
+        const id = appState.activeAssessmentId;
+        appState.assessments[id].answers = {};
+        appState.assessments[id].completed = false;
+        appState.assessments[id].score = 0;
+        appState.assessments[id].level = 'Not Started';
+        if (id === 'adhd') {
+          appState.assessments.adhd.subscales = {
+            sub_inattention: { raw: 0, tScore: 50 },
+            sub_hyperactivity: { raw: 0, tScore: 50 },
+            sub_impulsivity: { raw: 0, tScore: 50 },
+            sub_selfconcept: { raw: 0, tScore: 50 }
+          };
+          appState.assessments.adhd.subtype = 'Pending Evaluation';
+        }
+        if (id === 'bullying') {
+          appState.assessments.bullying.subscales = {
+            sub_internalized: { raw: 0, max: 16 },
+            sub_peer: { raw: 0, max: 16 },
+            sub_domestic: { raw: 0, max: 16 },
+            sub_school: { raw: 0, max: 16 },
+            sub_community: { raw: 0, max: 16 }
+          };
+          appState.assessments.bullying.safetyAlert = false;
+        }
+        saveState();
+        this.renderAssessmentForm(id);
+        this.updateDashboardStats();
+        this.showToast('Form cleared.');
+      },
+
+      submitCurrentAssessment() {
+        const id = appState.activeAssessmentId;
+        const def = ASSESSMENT_DEFINITIONS[id];
+        const answers = appState.assessments[id].answers || {};
+
+        // Validation: require all questions answered
+        const missing = def.questions.filter(q => answers[q.id] === undefined);
+        if (missing.length > 0) {
+          this.showToast(`Please answer all ${def.questions.length} questions before scoring.`, 'fa-triangle-exclamation', true);
+          return;
+        }
+
+        // Calculate Scores & Categorize
+        if (id === 'adhd') {
+          // CAARS Multi-Subscale Algorithm
+          const subTotals = {
+            sub_inattention: 0,
+            sub_hyperactivity: 0,
+            sub_impulsivity: 0,
+            sub_selfconcept: 0
+          };
+
+          def.questions.forEach(q => {
+            const val = Number(answers[q.id]) || 0;
+            if (subTotals[q.subscale] !== undefined) {
+              subTotals[q.subscale] += val;
+            }
+          });
+
+          // Standardized T-Score Conversion
+          const calcTScore = (raw) => {
+            const table = { 0: 42, 1: 46, 2: 50, 3: 54, 4: 58, 5: 62, 6: 66, 7: 70, 8: 75, 9: 80 };
+            return table[raw] || 50;
+          };
+
+          const tInattention = calcTScore(subTotals.sub_inattention);
+          const tHyperactivity = calcTScore(subTotals.sub_hyperactivity);
+          const tImpulsivity = calcTScore(subTotals.sub_impulsivity);
+          const tSelfconcept = calcTScore(subTotals.sub_selfconcept);
+
+          appState.assessments.adhd.subscales = {
+            sub_inattention: { raw: subTotals.sub_inattention, tScore: tInattention },
+            sub_hyperactivity: { raw: subTotals.sub_hyperactivity, tScore: tHyperactivity },
+            sub_impulsivity: { raw: subTotals.sub_impulsivity, tScore: tImpulsivity },
+            sub_selfconcept: { raw: subTotals.sub_selfconcept, tScore: tSelfconcept }
+          };
+
+          const totalRaw = subTotals.sub_inattention + subTotals.sub_hyperactivity + subTotals.sub_impulsivity + subTotals.sub_selfconcept;
+          appState.assessments.adhd.score = totalRaw;
+          appState.assessments.adhd.completed = true;
+
+          const inattentiveHigh = tInattention >= 65;
+          const hyperImpulseHigh = (tHyperactivity >= 65 || tImpulsivity >= 65);
+
+          if (inattentiveHigh && hyperImpulseHigh) {
+            appState.assessments.adhd.subtype = 'Combined Presentation (ADHD-C)';
+          } else if (inattentiveHigh) {
+            appState.assessments.adhd.subtype = 'Predominantly Inattentive Presentation (ADHD-I)';
+          } else if (hyperImpulseHigh) {
+            appState.assessments.adhd.subtype = 'Predominantly Hyperactive/Impulsive (ADHD-HI)';
+          } else {
+            appState.assessments.adhd.subtype = 'Subclinical / Unspecified Traits';
+          }
+
+          const maxT = Math.max(tInattention, tHyperactivity, tImpulsivity, tSelfconcept);
+          if (maxT >= 65) appState.assessments.adhd.level = 'elevated';
+          else if (maxT >= 60) appState.assessments.adhd.level = 'moderate';
+          else appState.assessments.adhd.level = 'mild';
+        }
+        else if (id === 'bullying') {
+          // Jaswant Bullying Scale (JBS-20)
+          const domainScores = {
+            sub_internalized: 0,
+            sub_peer: 0,
+            sub_domestic: 0,
+            sub_school: 0,
+            sub_community: 0
+          };
+
+          def.questions.forEach(q => {
+            const val = Number(answers[q.id]) || 0;
+            if (domainScores[q.subscale] !== undefined) {
+              domainScores[q.subscale] += val;
+            }
+          });
+
+          const totalBullying = Object.values(domainScores).reduce((a, b) => a + b, 0);
+          appState.assessments.bullying.score = totalBullying;
+          appState.assessments.bullying.completed = true;
+
+          appState.assessments.bullying.subscales = {
+            sub_internalized: { raw: domainScores.sub_internalized, max: 16 },
+            sub_peer: { raw: domainScores.sub_peer, max: 16 },
+            sub_domestic: { raw: domainScores.sub_domestic, max: 16 },
+            sub_school: { raw: domainScores.sub_school, max: 16 },
+            sub_community: { raw: domainScores.sub_community, max: 16 }
+          };
+
+          // Physical safety or severe domestic/school threat trigger (Items 8, 10, 14, 16, or 20 >= 3)
+          const highRiskItems = ['jbs_8', 'jbs_10', 'jbs_14', 'jbs_16', 'jbs_20'];
+          const hasSafetyThreat = highRiskItems.some(itemId => Number(answers[itemId]) >= 3);
+          appState.assessments.bullying.safetyAlert = hasSafetyThreat;
+
+          // Severity classification (0-80)
+          if (totalBullying <= 15) {
+            appState.assessments.bullying.level = 'minimal';
+          } else if (totalBullying <= 32) {
+            appState.assessments.bullying.level = 'mild';
+          } else if (totalBullying <= 50) {
+            appState.assessments.bullying.level = 'moderate';
+          } else {
+            appState.assessments.bullying.level = 'elevated';
+          }
+        }
+        else if (id === 'ld') {
+          let total = 0;
+          Object.values(answers).forEach(val => total += Number(val));
+          appState.assessments.ld.score = total;
+          appState.assessments.ld.completed = true;
+
+          if (total <= 7) appState.assessments.ld.level = 'mild';
+          else if (total <= 15) appState.assessments.ld.level = 'moderate';
+          else appState.assessments.ld.level = 'elevated';
+        }
+        else if (id === 'autism') {
+          let total = 0;
+          def.questions.forEach(q => {
+            const val = answers[q.id];
+            if (q.reverse) total += (3 - val);
+            else total += val;
+          });
+          appState.assessments.autism.score = total;
+          appState.assessments.autism.completed = true;
+
+          if (total <= 6) appState.assessments.autism.level = 'mild';
+          else if (total <= 11) appState.assessments.autism.level = 'moderate';
+          else appState.assessments.autism.level = 'elevated';
+        }
+        else if (id === 'career') {
+          const riasecScores = [];
+          def.questions.forEach(q => {
+            riasecScores.push({ theme: q.subscale, score: answers[q.id] || 0 });
+          });
+          riasecScores.sort((a, b) => b.score - a.score);
+          appState.assessments.career.topThemes = riasecScores;
+          appState.assessments.career.score = riasecScores[0].score;
+          appState.assessments.career.completed = true;
+          appState.assessments.career.level = `${riasecScores[0].theme} / ${riasecScores[1].theme}`;
+        }
+
+        saveState();
+        this.updateDashboardStats();
+        this.autoGenerateTasksFromAssessment(id);
+        this.showToast(`${def.title} scored! Solutions & tasks have been generated.`);
+
+        setTimeout(() => {
+          this.navigate('reports');
+        }, 600);
+      },
+
+      // --- POPULATE TASKS FROM OUTCOMES ---
+      autoGenerateTasksFromAssessment(batteryId) {
+        if (batteryId === 'career') {
+          const top = appState.assessments.career.topThemes || [];
+          if (top.length >= 2) {
+            const task = {
+              id: 'task_' + Date.now(),
+              title: `Research high-fit careers in ${top[0].theme} & ${top[1].theme}`,
+              domain: 'career',
+              priority: 'High',
+              status: 'todo',
+              desc: `Explore job boards and industry networks focusing on ${top[0].theme} strengths with neuro-friendly accommodations.`,
+              createdAt: new Date().toISOString()
+            };
+            if (!appState.tasks.some(t => t.title === task.title)) {
+              appState.tasks.push(task);
+            }
+          }
+          return;
+        }
+
+        // Domain-specific tailored tasks for Jaswant Bullying Scale (JBS-20)
+        if (batteryId === 'bullying' && appState.assessments.bullying.subscales) {
+          const subs = appState.assessments.bullying.subscales;
+          
+          if (subs.sub_peer && subs.sub_peer.raw >= 6) {
+            const tPeer = {
+              id: 'task_' + Date.now() + '_jbs_peer',
+              title: 'Digital Privacy Lockdown & Cyberbullying Evidence Archive',
+              domain: 'bullying',
+              priority: 'High',
+              status: 'todo',
+              desc: 'JBS Peer Domain: Screenshot harassing messages, set Instagram/TikTok/WhatsApp to private, and block abusive accounts.',
+              createdAt: new Date().toISOString()
+            };
+            if (!appState.tasks.some(t => t.title === tPeer.title)) appState.tasks.push(tPeer);
+          }
+
+          if (subs.sub_school && subs.sub_school.raw >= 6) {
+            const tSchool = {
+              id: 'task_' + Date.now() + '_jbs_sch',
+              title: 'School Safe Corridor & Staff Advocacy Request',
+              domain: 'bullying',
+              priority: 'High',
+              status: 'todo',
+              desc: 'JBS School Domain: Map monitored transition routes; submit written intervention request to school designated safeguarding lead.',
+              createdAt: new Date().toISOString()
+            };
+            if (!appState.tasks.some(t => t.title === tSchool.title)) appState.tasks.push(tSchool);
+          }
+
+          if (subs.sub_internalized && subs.sub_internalized.raw >= 6) {
+            const tInt = {
+              id: 'task_' + Date.now() + '_jbs_int',
+              title: 'Somatic De-escalation & Self-Blame Cognitive Reframing',
+              domain: 'bullying',
+              priority: 'Medium',
+              status: 'todo',
+              desc: 'JBS Internalized Distress: Daily 5-minute somatic grounding; remind self that peer hostility reflects perpetrator pathology, not personal worth.',
+              createdAt: new Date().toISOString()
+            };
+            if (!appState.tasks.some(t => t.title === tInt.title)) appState.tasks.push(tInt);
+          }
+
+          if (subs.sub_community && subs.sub_community.raw >= 6) {
+            const tComm = {
+              id: 'task_' + Date.now() + '_jbs_comm',
+              title: 'Neighborhood Transit Safety & Buddy System',
+              domain: 'bullying',
+              priority: 'High',
+              status: 'todo',
+              desc: 'JBS Community Domain: Coordinate shared walking routes to bus stop/store; program local community helpline on speed dial.',
+              createdAt: new Date().toISOString()
+            };
+            if (!appState.tasks.some(t => t.title === tComm.title)) appState.tasks.push(tComm);
+          }
+
+          if (subs.sub_domestic && subs.sub_domestic.raw >= 6) {
+            const tDom = {
+              id: 'task_' + Date.now() + '_jbs_dom',
+              title: 'Domestic Safe Haven & External Trusted Adult Liaison',
+              domain: 'bullying',
+              priority: 'High',
+              status: 'todo',
+              desc: 'JBS Domestic Domain: Establish private emotional sanctuary and connect with trusted relative, mentor, or confidential support line.',
+              createdAt: new Date().toISOString()
+            };
+            if (!appState.tasks.some(t => t.title === tDom.title)) appState.tasks.push(tDom);
+          }
+        }
+
+        // Subscale targeted injection for CAARS
+        if (batteryId === 'adhd' && appState.assessments.adhd.subscales) {
+          const subs = appState.assessments.adhd.subscales;
+          if (subs.sub_inattention && subs.sub_inattention.tScore >= 60) {
+            if (!appState.tasks.some(t => t.title === '10-Minute Visual Declutter Before Work Sprint')) {
+              appState.tasks.push({
+                id: 'task_' + Date.now() + '_inatt',
+                title: '10-Minute Visual Declutter Before Work Sprint',
+                domain: 'adhd',
+                priority: 'High',
+                status: 'todo',
+                desc: 'CAARS Inattention Action: Clear physical field of view and turn on website blocker prior to deep work.',
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+          if (subs.sub_impulsivity && subs.sub_impulsivity.tScore >= 60) {
+            if (!appState.tasks.some(t => t.title === 'Dialectical Stop-Reflect Routine (Impulsivity Cooling)')) {
+              appState.tasks.push({
+                id: 'task_' + Date.now() + '_imp',
+                title: 'Dialectical Stop-Reflect Routine (Impulsivity Cooling)',
+                domain: 'adhd',
+                priority: 'High',
+                status: 'todo',
+                desc: 'CAARS Emotional Lability: 90-second cooling breath cycle before answering provocative messages.',
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+          if (subs.sub_hyperactivity && subs.sub_hyperactivity.tScore >= 60) {
+            if (!appState.tasks.some(t => t.title === 'Sensory Output Pacing & Stand-Up Transitions')) {
+              appState.tasks.push({
+                id: 'task_' + Date.now() + '_hyp',
+                title: 'Sensory Output Pacing & Stand-Up Transitions',
+                domain: 'adhd',
+                priority: 'Medium',
+                status: 'todo',
+                desc: 'CAARS Motor Restlessness: Integrate standing desk intervals and isometric sensory release.',
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+        }
+
+        const level = appState.assessments[batteryId].level;
+        if (!level || !INTERVENTIONS_CATALOG[batteryId] || !INTERVENTIONS_CATALOG[batteryId][level]) return;
+
+        const catalog = INTERVENTIONS_CATALOG[batteryId][level];
+        catalog.interventions.forEach(item => {
+          const exists = appState.tasks.some(t => t.title === item.title);
+          if (!exists) {
+            appState.tasks.push({
+              id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+              title: item.title,
+              domain: batteryId,
+              priority: item.priority || 'Medium',
+              status: 'todo',
+              desc: item.desc,
+              createdAt: new Date().toISOString()
+            });
+          }
+        });
+        saveState();
+      },
+
+      populateDefaultTasksFromResults() {
+        let addedCount = 0;
+        ['adhd', 'bullying', 'ld', 'autism'].forEach(b => {
+          const level = appState.assessments[b].level;
+          if (level && INTERVENTIONS_CATALOG[b] && INTERVENTIONS_CATALOG[b][level]) {
+            INTERVENTIONS_CATALOG[b][level].interventions.forEach(item => {
+              if (!appState.tasks.some(t => t.title === item.title)) {
+                appState.tasks.push({
+                  id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                  title: item.title,
+                  domain: b,
+                  priority: item.priority || 'Medium',
+                  status: 'todo',
+                  desc: item.desc,
+                  createdAt: new Date().toISOString()
+                });
+                addedCount++;
+              }
+            });
+          }
+        });
+
+        if (addedCount > 0) {
+          saveState();
+          this.renderTasks();
+          this.showToast(`Synced ${addedCount} evidence-based action tasks.`);
+        } else {
+          this.showToast('All recommended tasks are already loaded.');
+        }
+      },
+
+      // --- DASHBOARD UPDATES & VISUALIZATIONS ---
+      updateDashboardStats() {
+        let completed = 0;
+        if (appState.assessments.adhd.completed) completed++;
+        if (appState.assessments.bullying && appState.assessments.bullying.completed) completed++;
+        if (appState.assessments.ld.completed) completed++;
+        if (appState.assessments.autism.completed) completed++;
+        if (appState.assessments.career.completed) completed++;
+
+        document.getElementById('stat-completed-screeners').textContent = `${completed} / 5`;
+        document.getElementById('stat-progress-pct').textContent = `${Math.round((completed / 5) * 100)}% Battery complete`;
+
+        // Task Stats
+        const totalTasks = appState.tasks.length;
+        const doneTasks = appState.tasks.filter(t => t.status === 'completed').length;
+        const rate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+        document.getElementById('stat-active-tasks').textContent = totalTasks - doneTasks;
+        document.getElementById('stat-tasks-done').textContent = `${doneTasks} completed`;
+        document.getElementById('stat-adherence-rate').textContent = `${rate}%`;
+
+        // Update Module Badges
+        const updateBadge = (id, obj) => {
+          const badge = document.getElementById(`badge-${id}`);
+          const summary = document.getElementById(`score-${id}-summary`);
+          if (!badge) return;
+
+          if (obj && obj.completed) {
+            badge.textContent = obj.level.toUpperCase();
+            if (obj.level === 'elevated') {
+              badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-100 text-rose-800';
+            } else if (obj.level === 'moderate') {
+              badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800';
+            } else {
+              badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
+            }
+            if (summary) summary.textContent = `Score: ${obj.score}`;
+          } else {
+            badge.textContent = 'Not Started';
+            badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600';
+          }
+        };
+
+        updateBadge('adhd', appState.assessments.adhd);
+        updateBadge('bullying', appState.assessments.bullying);
+        updateBadge('ld', appState.assessments.ld);
+        updateBadge('autism', appState.assessments.autism);
+
+        const careerBadge = document.getElementById('badge-career');
+        if (careerBadge) {
+          if (appState.assessments.career.completed && appState.assessments.career.topThemes.length) {
+            careerBadge.textContent = appState.assessments.career.topThemes[0].theme;
+            careerBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800';
+          } else {
+            careerBadge.textContent = 'Not Started';
+            careerBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600';
+          }
+        }
+
+        this.renderDashboardSuggestedList();
+      },
+
+      renderDashboardSuggestedList() {
+        const container = document.getElementById('dashboard-suggested-list');
+        if (!container) return;
+
+        let suggestions = [];
+        if (!appState.assessments.adhd.completed) {
+          suggestions.push({ icon: 'fa-bolt', text: 'Complete ADHD Executive Screener', action: () => app.startAssessment('adhd') });
+        }
+        if (!appState.assessments.bullying.completed) {
+          suggestions.push({ icon: 'fa-shield-cat', text: 'Screen Bullying & Environmental Safety (JBS)', action: () => app.startAssessment('bullying') });
+        }
+        if (!appState.assessments.career.completed) {
+          suggestions.push({ icon: 'fa-compass', text: 'Discover RIASEC Career Trajectory', action: () => app.startAssessment('career') });
+        }
+
+        const pendingTask = appState.tasks.find(t => t.status === 'todo');
+        if (pendingTask) {
+          suggestions.push({ icon: 'fa-circle-check', text: `Execute: ${pendingTask.title}`, action: () => app.navigate('tasks') });
+        }
+
+        if (suggestions.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-4 text-xs text-slate-400">
+              <i class="fa-solid fa-circle-check text-mint-500 text-2xl mb-1"></i>
+              <p>All core screeners up to date! Continue daily habit tracking.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = suggestions.map((s, idx) => `
+          <div onclick="window.dashboardAction(${idx})" class="p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-brand-50 hover:border-brand-200 transition cursor-pointer flex items-center justify-between">
+            <div class="flex items-center space-x-2 text-xs font-medium text-slate-700">
+              <i class="fa-solid ${s.icon} text-brand-600"></i>
+              <span>${s.text}</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+          </div>
+        `).join('');
+
+        window.dashboardAction = (index) => {
+          if (suggestions[index] && suggestions[index].action) {
+            suggestions[index].action();
+          }
+        };
+      },
+
+      radarChartInstance: null,
+      renderRadarChart() {
+        const canvas = document.getElementById('overviewRadarChart');
+        const fallback = document.getElementById('chart-fallback');
+        if (!canvas) return;
+
+        const anyCompleted = Object.values(appState.assessments).some(a => a.completed);
+        if (!anyCompleted) {
+          if (fallback) fallback.classList.remove('hidden');
+          return;
+        } else {
+          if (fallback) fallback.classList.add('hidden');
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (this.radarChartInstance) {
+          this.radarChartInstance.destroy();
+        }
+
+        const adhdNorm = appState.assessments.adhd.completed ? Math.min(100, Math.round((appState.assessments.adhd.score / 36) * 100)) : 20;
+        const bullyingNorm = appState.assessments.bullying && appState.assessments.bullying.completed ? Math.min(100, Math.round((appState.assessments.bullying.score / 80) * 100)) : 10;
+        const ldNorm = appState.assessments.ld.completed ? Math.round((appState.assessments.ld.score / 24) * 100) : 15;
+        const asdNorm = appState.assessments.autism.completed ? Math.round((appState.assessments.autism.score / 18) * 100) : 25;
+        
+        let careerDrive = 35;
+        if (appState.assessments.career.completed && appState.assessments.career.topThemes.length) {
+          careerDrive = Math.min(100, appState.assessments.career.topThemes[0].score * 25);
+        }
+
+        this.radarChartInstance = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: [
+              'Executive Strain (CAARS)',
+              'Bullying Threat (JBS)',
+              'Learning Friction (LD)',
+              'Sensory / ASD',
+              'Vocational Aptitude'
+            ],
+            datasets: [{
+              label: 'Neuro-Ecological Stress & Aptitude (%)',
+              data: [adhdNorm, bullyingNorm, ldNorm, asdNorm, careerDrive],
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              borderColor: '#e11d48',
+              pointBackgroundColor: '#be123c',
+              pointBorderColor: '#fff',
+              pointHoverBackgroundColor: '#fff',
+              pointHoverBorderColor: '#be123c'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                angleLines: { color: '#e2e8f0' },
+                grid: { color: '#f1f5f9' },
+                suggestedMin: 0,
+                suggestedMax: 100,
+                ticks: {
+                  stepSize: 20,
+                  display: false
+                },
+                pointLabels: {
+                  font: { size: 10, weight: '600', family: 'Inter' },
+                  color: '#475569'
+                }
+              }
+            },
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+      },
+
+      // --- DIAGNOSTIC REPORT GENERATION ---
+      renderReport() {
+        document.getElementById('report-date').textContent = new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        // 1. Render Summary Cards
+        const summaryCards = document.getElementById('report-cards-summary');
+        summaryCards.innerHTML = '';
+
+        const domains = [
+          { key: 'adhd', label: 'CAARS Adult ADHD Battery', max: 36 },
+          { key: 'bullying', label: 'Jaswant Bullying (JBS-20)', max: 80 },
+          { key: 'ld', label: 'Learning Disability Check', max: 24 },
+          { key: 'autism', label: 'Autism Spectrum (AQ)', max: 18 }
+        ];
+
+        domains.forEach(d => {
+          const item = appState.assessments[d.key];
+          const hasData = item && item.completed;
+          const level = hasData ? item.level : 'Pending';
+          let colorClass = 'bg-slate-50 border-slate-200 text-slate-700';
+
+          if (level === 'elevated') colorClass = 'bg-rose-50 border-rose-200 text-rose-900';
+          else if (level === 'moderate') colorClass = 'bg-amber-50 border-amber-200 text-amber-900';
+          else if (level === 'mild' || level === 'minimal') colorClass = 'bg-emerald-50 border-emerald-200 text-emerald-900';
+
+          summaryCards.innerHTML += `
+            <div class="p-4 rounded-xl border ${colorClass} flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider opacity-75">${d.label}</span>
+                <h4 class="text-base font-extrabold mt-1 capitalize">${hasData ? level : 'Not Screened'}</h4>
+              </div>
+              <div class="mt-3 text-xs flex justify-between items-center opacity-90">
+                <span>Score: ${hasData ? item.score : '-'}/${d.max}</span>
+                <span>${hasData ? (d.key === 'adhd' && item.subtype ? item.subtype.split(' ')[0] : Math.round((item.score / d.max) * 100) + '%') : 'N/A'}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        // Career Card in Summary
+        const car = appState.assessments.career;
+        summaryCards.innerHTML += `
+          <div class="p-4 rounded-xl border bg-brand-50 border-brand-200 text-brand-900 flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider opacity-75">Holland RIASEC Primary</span>
+              <h4 class="text-base font-extrabold mt-1">${car.completed && car.topThemes.length ? car.topThemes[0].theme : 'Pending'}</h4>
+            </div>
+            <div class="mt-3 text-xs flex justify-between items-center opacity-90">
+              <span>Secondary: ${car.completed && car.topThemes.length > 1 ? car.topThemes[1].theme : '-'}</span>
+              <span>Vocational fit</span>
+            </div>
+          </div>
+        `;
+
+        // 2. Render Detailed Sections
+        const detailContainer = document.getElementById('report-detailed-sections');
+        detailContainer.innerHTML = '';
+
+        // ADHD Section
+        const adhdAssm = appState.assessments.adhd;
+        if (!adhdAssm.completed) {
+          detailContainer.innerHTML += `
+            <div class="p-5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-700">Conners' Adult ADHD Rating Scales (CAARS)</h3>
+                <p class="text-xs text-slate-500">Assessment not completed yet. Complete the 12-item battery to generate standardized clinical T-Scores.</p>
+              </div>
+              <button onclick="app.startAssessment('adhd')" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold">
+                Take CAARS Screener
+              </button>
+            </div>
+          `;
+        } else {
+          const subs = adhdAssm.subscales;
+          const getBand = (t) => {
+            if (t >= 70) return { label: 'Highly Elevated', color: 'bg-rose-600 text-white' };
+            if (t >= 65) return { label: 'Elevated', color: 'bg-rose-100 text-rose-800' };
+            if (t >= 60) return { label: 'Slightly Elevated', color: 'bg-amber-100 text-amber-800' };
+            return { label: 'Average', color: 'bg-emerald-100 text-emerald-800' };
+          };
+
+          const cat = INTERVENTIONS_CATALOG.adhd[adhdAssm.level];
+
+          detailContainer.innerHTML += `
+            <div class="rounded-xl border ${cat.color} p-6">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wide opacity-75">CAARS Adult ADHD Multi-Subscale Findings</span>
+                  <h3 class="text-lg font-bold text-slate-900 mt-0.5">${cat.level}</h3>
+                  <div class="mt-1 flex items-center space-x-2">
+                    <span class="text-xs font-extrabold text-brand-700 bg-brand-100 px-2.5 py-0.5 rounded-full">
+                      DSM-5 Presentation: ${adhdAssm.subtype}
+                    </span>
+                  </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold ${cat.badgeColor} self-start sm:self-auto">
+                  Total Score: ${adhdAssm.score}/36
+                </span>
+              </div>
+
+              <!-- CAARS 4 Subscale Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 my-4">
+                <div class="bg-white/90 p-3.5 rounded-xl border border-slate-200">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Subscale A: Inattention</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${getBand(subs.sub_inattention.tScore).color}">
+                      T = ${subs.sub_inattention.tScore}
+                    </span>
+                  </div>
+                  <h5 class="text-xs font-bold text-slate-800">Memory &amp; Executive</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Raw: ${subs.sub_inattention.raw}/9 &bull; ${getBand(subs.sub_inattention.tScore).label}</p>
+                </div>
+
+                <div class="bg-white/90 p-3.5 rounded-xl border border-slate-200">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Subscale B: Motor</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${getBand(subs.sub_hyperactivity.tScore).color}">
+                      T = ${subs.sub_hyperactivity.tScore}
+                    </span>
+                  </div>
+                  <h5 class="text-xs font-bold text-slate-800">Hyperactivity / Restless</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Raw: ${subs.sub_hyperactivity.raw}/9 &bull; ${getBand(subs.sub_hyperactivity.tScore).label}</p>
+                </div>
+
+                <div class="bg-white/90 p-3.5 rounded-xl border border-slate-200">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Subscale C: Emotional</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${getBand(subs.sub_impulsivity.tScore).color}">
+                      T = ${subs.sub_impulsivity.tScore}
+                    </span>
+                  </div>
+                  <h5 class="text-xs font-bold text-slate-800">Impulsivity &amp; Lability</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Raw: ${subs.sub_impulsivity.raw}/9 &bull; ${getBand(subs.sub_impulsivity.tScore).label}</p>
+                </div>
+
+                <div class="bg-white/90 p-3.5 rounded-xl border border-slate-200">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Subscale D: Efficacy</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${getBand(subs.sub_selfconcept.tScore).color}">
+                      T = ${subs.sub_selfconcept.tScore}
+                    </span>
+                  </div>
+                  <h5 class="text-xs font-bold text-slate-800">Self-Concept / Index</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Raw: ${subs.sub_selfconcept.raw}/9 &bull; ${getBand(subs.sub_selfconcept.tScore).label}</p>
+                </div>
+              </div>
+
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed mb-4">${cat.summary}</p>
+              
+              <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2.5">CAARS Subscale-Specific Interventions &amp; Coping Systems:</h4>
+                <ul class="space-y-2">
+                  ${cat.interventions.map(act => `
+                    <li class="flex items-start space-x-2 text-xs text-slate-700">
+                      <i class="fa-solid fa-circle-check text-brand-600 mt-0.5"></i>
+                      <div><strong>${act.title}:</strong> ${act.desc}</div>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            </div>
+          `;
+        }
+
+        // Jaswant Bullying Scale (JBS-20) Profile Section
+        const jbsAssm = appState.assessments.bullying;
+        if (!jbsAssm || !jbsAssm.completed) {
+          detailContainer.innerHTML += `
+            <div class="p-5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-700">Jaswant Bullying Scale (JBS-20)</h3>
+                <p class="text-xs text-slate-500">Assessment not completed yet. Screen for ecological harassment across Peer, Domestic, School, and Community settings.</p>
+              </div>
+              <button onclick="app.startAssessment('bullying')" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold">
+                Take JBS Screener
+              </button>
+            </div>
+          `;
+        } else {
+          const cat = INTERVENTIONS_CATALOG.bullying[jbsAssm.level] || INTERVENTIONS_CATALOG.bullying.mild;
+          const subs = jbsAssm.subscales;
+
+          detailContainer.innerHTML += `
+            <div class="rounded-xl border ${cat.color} p-6">
+              ${jbsAssm.safetyAlert ? `
+                <div class="mb-4 p-3.5 bg-rose-600 text-white rounded-xl shadow-md flex items-center space-x-3">
+                  <i class="fa-solid fa-triangle-exclamation text-2xl animate-pulse"></i>
+                  <div>
+                    <h5 class="text-xs font-extrabold uppercase tracking-wider">Critical Safety Trigger Activated</h5>
+                    <p class="text-xs text-rose-100 leading-snug">Severe physical threats, domestic intimidation, or school avoidance flagged. Immediate trusted adult liaison or crisis support recommended.</p>
+                  </div>
+                </div>
+              ` : ''}
+
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wide opacity-75">Jaswant Bullying Scale (JBS-20) Multi-Ecological Profile</span>
+                  <h3 class="text-lg font-bold text-slate-900 mt-0.5">${cat.level}</h3>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold ${cat.badgeColor} self-start sm:self-auto">
+                  Total Score: ${jbsAssm.score} / 80
+                </span>
+              </div>
+
+              <!-- 5 JBS Ecological Subscale Cards -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 my-4">
+                <div class="bg-white/90 p-3 rounded-xl border border-slate-200">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase">Domain 1</span>
+                  <h5 class="text-xs font-bold text-slate-800">Internalized Distress</h5>
+                  <div class="mt-1 flex items-center justify-between text-xs">
+                    <span class="font-extrabold text-brand-700">${subs.sub_internalized.raw}/16</span>
+                    <span class="text-[10px] text-slate-400">Hypervigilance</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                    <div class="bg-brand-500 h-1.5 rounded-full" style="width: ${(subs.sub_internalized.raw/16)*100}%"></div>
+                  </div>
+                </div>
+
+                <div class="bg-white/90 p-3 rounded-xl border border-slate-200">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase">Domain 2</span>
+                  <h5 class="text-xs font-bold text-slate-800">Peer &amp; Cyber</h5>
+                  <div class="mt-1 flex items-center justify-between text-xs">
+                    <span class="font-extrabold text-brand-700">${subs.sub_peer.raw}/16</span>
+                    <span class="text-[10px] text-slate-400">Social Exclusion</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                    <div class="bg-brand-500 h-1.5 rounded-full" style="width: ${(subs.sub_peer.raw/16)*100}%"></div>
+                  </div>
+                </div>
+
+                <div class="bg-white/90 p-3 rounded-xl border border-slate-200">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase">Domain 3</span>
+                  <h5 class="text-xs font-bold text-slate-800">Domestic &amp; Family</h5>
+                  <div class="mt-1 flex items-center justify-between text-xs">
+                    <span class="font-extrabold text-brand-700">${subs.sub_domestic.raw}/16</span>
+                    <span class="text-[10px] text-slate-400">Home Attacks</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                    <div class="bg-brand-500 h-1.5 rounded-full" style="width: ${(subs.sub_domestic.raw/16)*100}%"></div>
+                  </div>
+                </div>
+
+                <div class="bg-white/90 p-3 rounded-xl border border-slate-200">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase">Domain 4</span>
+                  <h5 class="text-xs font-bold text-slate-800">School &amp; Neglect</h5>
+                  <div class="mt-1 flex items-center justify-between text-xs">
+                    <span class="font-extrabold text-brand-700">${subs.sub_school.raw}/16</span>
+                    <span class="text-[10px] text-slate-400">Hallway/Staff</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                    <div class="bg-brand-500 h-1.5 rounded-full" style="width: ${(subs.sub_school.raw/16)*100}%"></div>
+                  </div>
+                </div>
+
+                <div class="bg-white/90 p-3 rounded-xl border border-slate-200">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase">Domain 5</span>
+                  <h5 class="text-xs font-bold text-slate-800">Neighborhood</h5>
+                  <div class="mt-1 flex items-center justify-between text-xs">
+                    <span class="font-extrabold text-brand-700">${subs.sub_community.raw}/16</span>
+                    <span class="text-[10px] text-slate-400">Public Transit</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                    <div class="bg-brand-500 h-1.5 rounded-full" style="width: ${(subs.sub_community.raw/16)*100}%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed mb-4">${cat.summary}</p>
+              
+              <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2.5">Targeted Ecological Safety Interventions:</h4>
+                <ul class="space-y-2">
+                  ${cat.interventions.map(act => `
+                    <li class="flex items-start space-x-2 text-xs text-slate-700">
+                      <i class="fa-solid fa-shield text-brand-600 mt-0.5"></i>
+                      <div><strong>${act.title}:</strong> ${act.desc}</div>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            </div>
+          `;
+        }
+
+        // Other modules (LD, Autism)
+        ['ld', 'autism'].forEach(b => {
+          const assm = appState.assessments[b];
+          if (!assm.completed) {
+            detailContainer.innerHTML += `
+              <div class="p-5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <h3 class="font-bold text-slate-700 capitalize">${b === 'ld' ? 'Learning Disability & Processing' : b.toUpperCase() + ' Screener'}</h3>
+                  <p class="text-xs text-slate-500">Assessment not completed yet.</p>
+                </div>
+                <button onclick="app.startAssessment('${b}')" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold">
+                  Take Screener
+                </button>
+              </div>
+            `;
+            return;
+          }
+
+          const cat = INTERVENTIONS_CATALOG[b][assm.level];
+          let interventionsList = '';
+          cat.interventions.forEach(act => {
+            interventionsList += `
+              <li class="flex items-start space-x-2 text-xs text-slate-700">
+                <i class="fa-solid fa-circle-check text-brand-600 mt-0.5"></i>
+                <div>
+                  <strong>${act.title}:</strong> ${act.desc}
+                </div>
+              </li>
+            `;
+          });
+
+          detailContainer.innerHTML += `
+            <div class="rounded-xl border ${cat.color} p-6">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wide opacity-75">${b.toUpperCase()} Diagnostic Findings</span>
+                  <h3 class="text-lg font-bold text-slate-900 mt-0.5">${cat.level}</h3>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold ${cat.badgeColor} self-start sm:self-auto">
+                  Score: ${assm.score}
+                </span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed mb-4">${cat.summary}</p>
+              
+              <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2.5">Evidence-Based Interventions &amp; Accommodations:</h4>
+                <ul class="space-y-2">
+                  ${interventionsList}
+                </ul>
+              </div>
+            </div>
+          `;
+        });
+
+        // 3. Render Career Guidance Pathway
+        const careerPathway = document.getElementById('report-career-pathway');
+        if (car.completed && car.topThemes && car.topThemes.length >= 2) {
+          const t1 = car.topThemes[0].theme;
+          const t2 = car.topThemes[1].theme;
+          careerPathway.innerHTML = `
+            <div>
+              <div class="flex items-center space-x-2 mb-2">
+                <i class="fa-solid fa-briefcase text-brand-600"></i>
+                <h3 class="text-base font-bold text-slate-900">Career Guidance &amp; Holland Code Synergy (${t1} - ${t2})</h3>
+              </div>
+              <p class="text-xs text-slate-600 mb-4">
+                Your primary profile synthesizes <strong>${t1}</strong> interests with <strong>${t2}</strong> problem-solving styles. Here is your neurodivergent workplace compatibility analysis:
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span class="font-bold text-brand-700 uppercase tracking-wide text-[10px]">Top Career Pathways</span>
+                  <ul class="mt-2 space-y-1.5 text-slate-700 font-medium">
+                    ${this.getCareerMatches(t1, t2).map(c => `<li>&bull; ${c}</li>`).join('')}
+                  </ul>
+                </div>
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span class="font-bold text-emerald-700 uppercase tracking-wide text-[10px]">Optimal Work Environment</span>
+                  <p class="mt-2 text-slate-700 leading-relaxed">
+                    ${this.getEnvironmentFit(t1, t2)}
+                  </p>
+                </div>
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span class="font-bold text-indigo-700 uppercase tracking-wide text-[10px]">Recommended Upskilling</span>
+                  <p class="mt-2 text-slate-700 leading-relaxed">
+                    Focus on project portfolio demonstrations, asynchronous collaboration tools, and structured self-advocacy for meeting accommodations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          careerPathway.innerHTML = `
+            <div class="p-5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-700">Career Guidance Inventory</h3>
+                <p class="text-xs text-slate-500">Complete the RIASEC inventory to view aligned vocational pathways and sensory work matches.</p>
+              </div>
+              <button onclick="app.startAssessment('career')" class="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-bold">
+                Start Career Screener
+              </button>
+            </div>
+          `;
+        }
+      },
+
+      getCareerMatches(t1, t2) {
+        const combo = `${t1}-${t2}`;
+        const mapping = {
+          'Investigative-Artistic': ['Data Visualization Engineer', 'UX Research Scientist', 'Bioinformatics Specialist', 'Scientific Writer'],
+          'Investigative-Realistic': ['Software Systems Architect', 'Robotics Specialist', 'Network Security Analyst', 'GIS Analyst'],
+          'Artistic-Enterprising': ['Creative Director', 'Product Strategy Lead', 'Design Agency Founder', 'Digital Content Producer'],
+          'Realistic-Conventional': ['Database Administrator', 'Network Hardware Engineer', 'Quality Assurance Automation', 'CAD Drafter'],
+          'Social-Investigative': ['Occupational Therapist', 'Cognitive Ergonomics Consultant', 'Special Needs Educator', 'Speech-Language Pathologist'],
+          'Enterprising-Social': ['People & Culture Operations', 'Non-profit Director', 'Agile Scrum Coach', 'Client Advocate']
+        };
+
+        return mapping[combo] || [
+          `${t1} Specialist`,
+          `${t2} Systems Consultant`,
+          `Hybrid ${t1} Analyst`,
+          `Applied ${t2} Designer`
+        ];
+      },
+
+      getEnvironmentFit(t1, t2) {
+        if (t1 === 'Investigative' || t2 === 'Investigative') {
+          return 'Low-interruption autonomous setups, remote or hybrid with clear written documentation and minimal open-plan noise.';
+        }
+        if (t1 === 'Artistic' || t2 === 'Artistic') {
+          return 'High psychological safety, non-linear scheduling, outcome-based deliverables rather than strict 9-to-5 desk monitoring.';
+        }
+        return 'Structured deliverables, explicit role descriptions, predictable operational rhythms, and clear support channels.';
+      },
+
+      exportJsonReport() {
+        const exportData = {
+          generatedAt: new Date().toISOString(),
+          assessments: appState.assessments,
+          activeTasks: appState.tasks
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `LOVE_Diagnostic_Report_${Date.now()}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        this.showToast('Report JSON exported.');
+      },
+
+      // --- TASK & HABIT TRACKER CONTROLLER ---
+      renderTasks() {
+        const domainFilter = document.getElementById('task-filter-domain').value;
+        const statusFilter = document.getElementById('task-filter-status').value;
+
+        const todoCol = document.getElementById('task-col-todo');
+        const progCol = document.getElementById('task-col-progress');
+        const doneCol = document.getElementById('task-col-done');
+
+        todoCol.innerHTML = '';
+        progCol.innerHTML = '';
+        doneCol.innerHTML = '';
+
+        let todoCount = 0;
+        let progCount = 0;
+        let doneCount = 0;
+
+        const filtered = appState.tasks.filter(t => {
+          if (domainFilter !== 'all' && t.domain !== domainFilter) return false;
+          if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+          return true;
+        });
+
+        filtered.forEach(task => {
+          if (task.status === 'todo') todoCount++;
+          if (task.status === 'in-progress') progCount++;
+          if (task.status === 'completed') doneCount++;
+
+          const card = document.createElement('div');
+          card.className = `p-4 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow transition space-y-2.5`;
+
+          const domainBadge = {
+          adhd: '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">ADHD</span>',
+          bullying: '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">Bullying / Safety</span>',
+          ld: '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Learning</span>',
+          autism: '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">Autism</span>',
+          career: '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Career</span>',
+          custom: '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">Custom</span>'
+        }[task.domain] || '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">Habit</span>';
+
+          const priorityBadge = task.priority === 'High' 
+            ? '<span class="text-[10px] font-bold text-rose-600">High Priority</span>'
+            : '<span class="text-[10px] font-semibold text-slate-400">Medium</span>';
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              ${domainBadge}
+              ${priorityBadge}
+            </div>
+            <h4 class="text-xs sm:text-sm font-bold text-slate-800 leading-snug ${task.status === 'completed' ? 'line-through text-slate-400' : ''}">
+              ${task.title}
+            </h4>
+            ${task.desc ? `<p class="text-xs text-slate-500 leading-relaxed">${task.desc}</p>` : ''}
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-1">
+                ${task.status !== 'todo' ? `
+                  <button onclick="app.moveTaskStatus('${task.id}', 'todo')" title="Move to To-Do" class="p-1 text-slate-400 hover:text-slate-600 rounded">
+                    <i class="fa-solid fa-arrow-left"></i>
+                  </button>
+                ` : ''}
+                ${task.status !== 'in-progress' ? `
+                  <button onclick="app.moveTaskStatus('${task.id}', 'in-progress')" title="Mark In-Progress" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-brand-700 rounded font-semibold text-[10px]">
+                    Focusing
+                  </button>
+                ` : ''}
+                ${task.status !== 'completed' ? `
+                  <button onclick="app.moveTaskStatus('${task.id}', 'completed')" title="Mark Completed" class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded font-semibold text-[10px]">
+                    <i class="fa-solid fa-check mr-1"></i>Done
+                  </button>
+                ` : ''}
+              </div>
+              <button onclick="app.deleteTask('${task.id}')" title="Delete Task" class="text-slate-300 hover:text-rose-500 p-1">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          `;
+
+          if (task.status === 'todo') todoCol.appendChild(card);
+          else if (task.status === 'in-progress') progCol.appendChild(card);
+          else doneCol.appendChild(card);
+        });
+
+        // Set counters
+        document.getElementById('col-count-todo').textContent = todoCount;
+        document.getElementById('col-count-progress').textContent = progCount;
+        document.getElementById('col-count-done').textContent = doneCount;
+
+        document.getElementById('tracker-stat-total').textContent = appState.tasks.length;
+        document.getElementById('tracker-stat-pending').textContent = todoCount;
+        document.getElementById('tracker-stat-progress').textContent = progCount;
+        document.getElementById('tracker-stat-completed').textContent = doneCount;
+
+        const badge = document.getElementById('task-badge');
+        if (badge) {
+          const active = todoCount + progCount;
+          if (active > 0) {
+            badge.textContent = active;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      },
+
+      moveTaskStatus(taskId, newStatus) {
+        const task = appState.tasks.find(t => t.id === taskId);
+        if (task) {
+          task.status = newStatus;
+          saveState();
+          this.renderTasks();
+          this.updateDashboardStats();
+          this.showToast(`Task updated to ${newStatus}.`);
+        }
+      },
+
+      deleteTask(taskId) {
+        appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+        saveState();
+        this.renderTasks();
+        this.updateDashboardStats();
+        this.showToast('Task removed.');
+      },
+
+      openNewTaskModal() {
+        document.getElementById('modal-task-id').value = '';
+        document.getElementById('modal-task-title').value = '';
+        document.getElementById('modal-task-desc').value = '';
+        document.getElementById('modal-task-domain').value = 'adhd';
+        document.getElementById('modal-task-priority').value = 'Medium';
+        document.getElementById('modal-task-status').value = 'todo';
+        document.getElementById('task-modal').classList.remove('hidden');
+      },
+
+      closeTaskModal() {
+        document.getElementById('task-modal').classList.add('hidden');
+      },
+
+      saveTaskFromModal() {
+        const title = document.getElementById('modal-task-title').value.trim();
+        if (!title) return;
+
+        const domain = document.getElementById('modal-task-domain').value;
+        const priority = document.getElementById('modal-task-priority').value;
+        const status = document.getElementById('modal-task-status').value;
+        const desc = document.getElementById('modal-task-desc').value.trim();
+
+        const newTask = {
+          id: 'task_' + Date.now(),
+          title,
+          domain,
+          priority,
+          status,
+          desc,
+          createdAt: new Date().toISOString()
+        };
+
+        appState.tasks.unshift(newTask);
+        saveState();
+        this.closeTaskModal();
+        this.renderTasks();
+        this.updateDashboardStats();
+        this.showToast('New habit task created.');
+      },
+
+      // --- SAMPLE DATA PRELOADER ---
+      loadSampleData() {
+        appState.assessments.adhd = {
+          answers: { 
+            caars_1: 3, caars_2: 3, caars_3: 2, 
+            caars_4: 2, caars_5: 3, caars_6: 2, 
+            caars_7: 3, caars_8: 2, caars_9: 2, 
+            caars_10: 3, caars_11: 3, caars_12: 2 
+          },
+          completed: true,
+          score: 30,
+          level: 'elevated',
+          subscales: {
+            sub_inattention: { raw: 8, tScore: 75 },
+            sub_hyperactivity: { raw: 7, tScore: 70 },
+            sub_impulsivity: { raw: 7, tScore: 70 },
+            sub_selfconcept: { raw: 8, tScore: 75 }
+          },
+          subtype: 'Combined Presentation (ADHD-C)'
+        };
+
+        // Preload Jaswant Bullying Scale (JBS-20) Profile
+        appState.assessments.bullying = {
+          answers: {
+            jbs_1: 3, jbs_2: 2, jbs_3: 3, jbs_4: 3,
+            jbs_5: 3, jbs_6: 3, jbs_7: 2, jbs_8: 3,
+            jbs_9: 2, jbs_10: 1, jbs_11: 2, jbs_12: 1,
+            jbs_13: 3, jbs_14: 3, jbs_15: 3, jbs_16: 2,
+            jbs_17: 2, jbs_18: 2, jbs_19: 1, jbs_20: 1
+          },
+          completed: true,
+          score: 45,
+          level: 'moderate',
+          subscales: {
+            sub_internalized: { raw: 11, max: 16 },
+            sub_peer: { raw: 11, max: 16 },
+            sub_domestic: { raw: 6, max: 16 },
+            sub_school: { raw: 11, max: 16 },
+            sub_community: { raw: 6, max: 16 }
+          },
+          safetyAlert: true
+        };
+
+        appState.assessments.ld = {
+          answers: { ld_1: 4, ld_2: 2, ld_3: 3, ld_4: 4, ld_5: 2, ld_6: 3 },
+          completed: true,
+          score: 18,
+          level: 'elevated'
+        };
+
+        appState.assessments.autism = {
+          answers: { asd_1: 3, asd_2: 1, asd_3: 0, asd_4: 1, asd_5: 3, asd_6: 3 },
+          completed: true,
+          score: 13,
+          level: 'elevated'
+        };
+
+        appState.assessments.career = {
+          answers: { car_r: 2, car_i: 4, car_a: 4, car_s: 3, car_e: 2, car_c: 1 },
+          completed: true,
+          score: 4,
+          level: 'Investigative / Artistic',
+          topThemes: [
+            { theme: 'Investigative', score: 4 },
+            { theme: 'Artistic', score: 4 },
+            { theme: 'Social', score: 3 },
+            { theme: 'Realistic', score: 2 },
+            { theme: 'Enterprising', score: 2 },
+            { theme: 'Conventional', score: 1 }
+          ]
+        };
+
+        appState.tasks = [
+          {
+            id: 'sample_caars_1',
+            title: '10-Minute Visual Declutter Before Work Sprint',
+            domain: 'adhd',
+            priority: 'High',
+            status: 'in-progress',
+            desc: 'CAARS Inattention Action: Clear physical field of view and turn on website blocker prior to deep work.',
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 'sample_jbs_1',
+            title: 'Digital Privacy Lockdown & Cyberbullying Evidence Archive',
+            domain: 'bullying',
+            priority: 'High',
+            status: 'todo',
+            desc: 'JBS Peer Domain: Screenshot harassing messages, set Instagram/WhatsApp to private, and block abusive accounts.',
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 'sample_jbs_2',
+            title: 'School Safe Corridor & Staff Advocacy Request',
+            domain: 'bullying',
+            priority: 'High',
+            status: 'todo',
+            desc: 'JBS School Domain: Map monitored transition routes; submit written intervention request to designated safeguarding lead.',
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 'sample_2',
+            title: 'Setup Speechify / Text-to-Speech Engine',
+            domain: 'ld',
+            priority: 'High',
+            status: 'todo',
+            desc: 'Enable auditory dual-channel reading to reduce visual strain and dyslexia word crowding.',
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: 'sample_4',
+            title: 'Curate UX & Scientific Research Portfolio',
+            domain: 'career',
+            priority: 'High',
+            status: 'completed',
+            desc: 'Highlight deep analytical problem solving aligned with Holland Investigative-Artistic code.',
+            createdAt: new Date().toISOString()
+          }
+        ];
+
+        saveState();
+        this.updateDashboardStats();
+        this.renderTasks();
+        this.renderReport();
+        this.showToast('Clinical sample profile with JBS-20 loaded!');
+        this.navigate('dashboard');
+      },
+
+      resetAllData() {
+        localStorage.removeItem(STORAGE_KEY);
+        appState.assessments = {
+          adhd: { 
+            answers: {}, 
+            completed: false, 
+            score: 0, 
+            level: 'Not Started',
+            subscales: {
+              sub_inattention: { raw: 0, tScore: 50 },
+              sub_hyperactivity: { raw: 0, tScore: 50 },
+              sub_impulsivity: { raw: 0, tScore: 50 },
+              sub_selfconcept: { raw: 0, tScore: 50 }
+            },
+            subtype: 'Pending Evaluation'
+          },
+          bullying: {
+            answers: {},
+            completed: false,
+            score: 0,
+            level: 'Not Started',
+            subscales: {
+              sub_internalized: { raw: 0, max: 16 },
+              sub_peer: { raw: 0, max: 16 },
+              sub_domestic: { raw: 0, max: 16 },
+              sub_school: { raw: 0, max: 16 },
+              sub_community: { raw: 0, max: 16 }
+            },
+            safetyAlert: false
+          },
+          ld: { answers: {}, completed: false, score: 0, level: 'Not Started' },
+          autism: { answers: {}, completed: false, score: 0, level: 'Not Started' },
+          career: { answers: {}, completed: false, score: 0, topThemes: [] }
+        };
+        appState.tasks = [];
+        this.updateDashboardStats();
+        this.renderAssessmentForm(appState.activeAssessmentId);
+        this.renderTasks();
+        this.renderReport();
+        if (this.radarChartInstance) this.radarChartInstance.destroy();
+        this.showToast('All assessments and tasks have been reset.');
+      }
+    };
+
+    // --- GOOGLE DRIVE BACKUP & RESTORE MODULE ---
+    const driveBackup = {
+      tokenClient: null,
+      accessToken: null,
+      gapiInited: false,
+      gisInited: false,
+      backupFileName: 'LOVE_Clinical_Backup.json',
+
+      openModal() {
+        const storedClientId = localStorage.getItem(GOOGLE_CLIENT_ID_KEY) || '';
+        const input = document.getElementById('drive-client-id');
+        if (input) input.value = storedClientId;
+        document.getElementById('drive-modal').classList.remove('hidden');
+        this.updateUi();
+      },
+
+      closeModal() {
+        document.getElementById('drive-modal').classList.add('hidden');
+      },
+
+      saveClientId() {
+        const input = document.getElementById('drive-client-id');
+        const val = input ? input.value.trim() : '';
+        if (val) {
+          localStorage.setItem(GOOGLE_CLIENT_ID_KEY, val);
+          app.showToast('Google Client ID saved.');
+          this.initGis();
+        } else {
+          localStorage.removeItem(GOOGLE_CLIENT_ID_KEY);
+          app.showToast('Cleared custom Client ID.');
+        }
+      },
+
+      updateUi() {
+        const statusText = document.getElementById('drive-status-text');
+        const authBtn = document.getElementById('drive-auth-btn');
+        if (this.accessToken) {
+          if (statusText) statusText.innerHTML = '<span class="text-emerald-600 font-bold flex items-center"><i class="fa-solid fa-check-circle mr-1"></i>Connected to Google Drive</span>';
+          if (authBtn) {
+            authBtn.textContent = 'Disconnect';
+            authBtn.className = 'px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold transition text-xs';
+          }
+        } else {
+          if (statusText) statusText.textContent = 'Not Connected to Google Account';
+          if (authBtn) {
+            authBtn.innerHTML = '<i class="fa-solid fa-key mr-1"></i>Connect Drive';
+            authBtn.className = 'px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-sm transition text-xs flex items-center space-x-1.5';
+          }
+        }
+      },
+
+      initGis() {
+        const clientId = localStorage.getItem(GOOGLE_CLIENT_ID_KEY) || '';
+        if (!clientId || typeof google === 'undefined' || !google.accounts) return;
+
+        try {
+          this.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: (resp) => {
+              if (resp.error) {
+                app.showToast('Google Authentication Failed: ' + resp.error, 'fa-triangle-exclamation', true);
+                return;
+              }
+              this.accessToken = resp.access_token;
+              this.updateUi();
+              app.showToast('Connected to Google Drive!', 'fa-cloud');
+            }
+          });
+        } catch (e) {
+          console.warn('GIS Init Error:', e);
+        }
+      },
+
+      handleAuthClick() {
+        if (this.accessToken) {
+          this.accessToken = null;
+          this.updateUi();
+          app.showToast('Disconnected from Google Drive.');
+          return;
+        }
+
+        const clientId = localStorage.getItem(GOOGLE_CLIENT_ID_KEY);
+        if (!clientId) {
+          document.getElementById('drive-config-panel').classList.remove('hidden');
+          app.showToast('Please specify your Google Client ID below first.', 'fa-info-circle');
+          return;
+        }
+
+        if (!this.tokenClient) {
+          this.initGis();
+        }
+
+        if (this.tokenClient) {
+          this.tokenClient.requestAccessToken({ prompt: 'consent' });
+        } else {
+          app.showToast('Google Services initializing, please try in 2 seconds...', 'fa-clock');
+        }
+      },
+
+      async backupToDrive() {
+        const backupPayload = {
+          app: 'LOVE Assessment & Guidance System',
+          version: '1.2',
+          exportedAt: new Date().toISOString(),
+          assessments: appState.assessments,
+          tasks: appState.tasks
+        };
+        const contentStr = JSON.stringify(backupPayload, null, 2);
+
+        // If not connected to Google Drive API, download local fallback file
+        if (!this.accessToken) {
+          this.downloadLocalBackup();
+          app.showToast('Google Drive not authorized: Downloaded backup file locally.', 'fa-file-arrow-down');
+          return;
+        }
+
+        app.showToast('Uploading backup to Google Drive...', 'fa-spinner');
+
+        try {
+          // 1. Search if LOVE_Clinical_Backup.json already exists in user's Drive
+          const query = encodeURIComponent(`name = '${this.backupFileName}' and trashed = false`);
+          const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
+            headers: { Authorization: `Bearer ${this.accessToken}` }
+          });
+          const searchData = await searchRes.json();
+
+          let fileId = null;
+          if (searchData.files && searchData.files.length > 0) {
+            fileId = searchData.files[0].id;
+          }
+
+          if (fileId) {
+            // Update existing file
+            await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${this.accessToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: contentStr
+            });
+          } else {
+            // Create new multipart file
+            const metadata = {
+              name: this.backupFileName,
+              mimeType: 'application/json',
+              description: 'LOVE Neuropsychological Assessments, Scores, and Behavioral Tasks Backup'
+            };
+            const boundary = '-------314159265358979323846';
+            const delimiter = `\r\n--${boundary}\r\n`;
+            const closeDelim = `\r\n--${boundary}--`;
+
+            const multipartRequestBody =
+              delimiter +
+              'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+              JSON.stringify(metadata) +
+              delimiter +
+              'Content-Type: application/json\r\n\r\n' +
+              contentStr +
+              closeDelim;
+
+            await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${this.accessToken}`,
+                'Content-Type': `multipart/related; boundary=${boundary}`
+              },
+              body: multipartRequestBody
+            });
+          }
+
+          document.getElementById('drive-last-sync-text').textContent = `Last backed up: ${new Date().toLocaleTimeString()}`;
+          app.showToast('Backup successfully saved in Google Drive!', 'fa-cloud-arrow-up');
+        } catch (err) {
+          console.error(err);
+          app.showToast('Error uploading to Google Drive: ' + err.message, 'fa-triangle-exclamation', true);
+        }
+      },
+
+      async restoreFromDrive() {
+        if (!this.accessToken) {
+          app.showToast('Please connect your Google Drive account first.', 'fa-circle-exclamation', true);
+          return;
+        }
+
+        app.showToast('Locating backup on Google Drive...', 'fa-spinner');
+
+        try {
+          const query = encodeURIComponent(`name = '${this.backupFileName}' and trashed = false`);
+          const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime)`, {
+            headers: { Authorization: `Bearer ${this.accessToken}` }
+          });
+          const searchData = await searchRes.json();
+
+          if (!searchData.files || searchData.files.length === 0) {
+            app.showToast(`No '${this.backupFileName}' found in your Drive.`, 'fa-circle-info');
+            return;
+          }
+
+          const fileId = searchData.files[0].id;
+          const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            headers: { Authorization: `Bearer ${this.accessToken}` }
+          });
+          const parsed = await fileRes.json();
+
+          this.applyRestoredData(parsed);
+          app.showToast('Data successfully restored from Google Drive!', 'fa-cloud-arrow-down');
+        } catch (err) {
+          console.error(err);
+          app.showToast('Failed to download from Drive: ' + err.message, 'fa-triangle-exclamation', true);
+        }
+      },
+
+      downloadLocalBackup() {
+        const payload = {
+          app: 'LOVE Assessment & Guidance System',
+          version: '1.2',
+          exportedAt: new Date().toISOString(),
+          assessments: appState.assessments,
+          tasks: appState.tasks
+        };
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
+        const dl = document.createElement('a');
+        dl.setAttribute('href', dataStr);
+        dl.setAttribute('download', `LOVE_Clinical_Backup_${Date.now()}.json`);
+        document.body.appendChild(dl);
+        dl.click();
+        dl.remove();
+        app.showToast('Backup file downloaded.');
+      },
+
+      uploadLocalBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            this.applyRestoredData(data);
+            app.showToast('Backup restored from selected file!');
+            this.closeModal();
+          } catch (err) {
+            app.showToast('Invalid backup file format.', 'fa-triangle-exclamation', true);
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      applyRestoredData(data) {
+        if (!data || (!data.assessments && !data.tasks)) {
+          throw new Error('Unrecognized schema');
+        }
+        if (data.assessments) appState.assessments = data.assessments;
+        if (data.tasks) appState.tasks = data.tasks;
+
+        saveState();
+        app.updateDashboardStats();
+        app.renderTasks();
+        app.renderReport();
+        app.renderAssessmentForm(appState.activeAssessmentId);
+        if (appState.activeView === 'dashboard') {
+          app.renderRadarChart();
+        }
+      }
+    };
+
+    // --- FOCUS STUDIO & TIMER LOGIC ---
+    const focusStudio = {
+      setDuration(minutes, mode) {
+        focusStudio.resetTimer();
+        appState.focusSession.duration = minutes * 60;
+        appState.focusSession.timeLeft = minutes * 60;
+        appState.focusSession.mode = mode;
+        document.getElementById('timer-mode-label').textContent = mode;
+        this.updateDisplay();
+      },
+
+      toggleTimer() {
+        const btn = document.getElementById('timer-toggle-btn');
+        if (appState.focusSession.isRunning) {
+          clearInterval(appState.focusSession.timerId);
+          appState.focusSession.isRunning = false;
+          btn.textContent = 'Resume Focus';
+          btn.className = 'px-5 py-2 rounded-xl bg-mint-500 hover:bg-mint-600 text-brand-900 font-bold text-xs transition shadow';
+        } else {
+          appState.focusSession.isRunning = true;
+          btn.textContent = 'Pause';
+          btn.className = 'px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs transition shadow';
+
+          appState.focusSession.timerId = setInterval(() => {
+            if (appState.focusSession.timeLeft > 0) {
+              appState.focusSession.timeLeft--;
+              focusStudio.updateDisplay();
+            } else {
+              clearInterval(appState.focusSession.timerId);
+              appState.focusSession.isRunning = false;
+              btn.textContent = 'Start Focus';
+              audioGenerator.playChime();
+              app.showToast('Focus interval finished! Take a restorative stretch.');
+            }
+          }, 1000);
+        }
+      },
+
+      resetTimer() {
+        clearInterval(appState.focusSession.timerId);
+        appState.focusSession.isRunning = false;
+        appState.focusSession.timeLeft = appState.focusSession.duration;
+        const btn = document.getElementById('timer-toggle-btn');
+        if (btn) {
+          btn.textContent = 'Start Focus';
+          btn.className = 'px-5 py-2 rounded-xl bg-mint-500 hover:bg-mint-600 text-brand-900 font-bold text-xs transition shadow';
+        }
+        this.updateDisplay();
+      },
+
+      updateDisplay() {
+        const totalSecs = appState.focusSession.timeLeft;
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        const fmt = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        const display = document.getElementById('timer-display');
+        if (display) display.textContent = fmt;
+      }
+    };
+
+    // --- WEB AUDIO API SYNTHESIZER (NO EXTERNAL SOUND URLS) ---
+    const audioGenerator = {
+      ctx: null,
+      activeSource: null,
+      gainNode: null,
+      currentType: null,
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+          this.gainNode = this.ctx.createGain();
+          this.gainNode.gain.value = 0.4;
+          this.gainNode.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+
+      setVolume(val) {
+        if (this.gainNode) {
+          this.gainNode.gain.value = parseFloat(val);
+        }
+      },
+
+      toggle(type) {
+        this.initContext();
+
+        // If clicking same active sound, stop it
+        if (this.currentType === type) {
+          this.stop();
+          return;
+        }
+
+        this.stop();
+        this.currentType = type;
+
+        const indicator = document.getElementById('audio-indicator');
+        if (indicator) {
+          indicator.textContent = `Playing: ${type.toUpperCase()}`;
+          indicator.className = 'text-xs px-2 py-0.5 rounded-full bg-mint-100 text-mint-800 font-bold';
+        }
+
+        // Highlight active button
+        document.querySelectorAll('.sound-btn').forEach(btn => btn.classList.remove('border-brand-500', 'bg-brand-50'));
+        const activeBtn = document.getElementById(`btn-sound-${type}`);
+        if (activeBtn) activeBtn.classList.add('border-brand-500', 'bg-brand-50');
+
+        if (type === 'brown') {
+          this.playBrownNoise();
+        } else if (type === 'pink') {
+          this.playPinkNoise();
+        } else if (type === 'tone') {
+          this.playBinauralTone(432);
+        }
+      },
+
+      stop() {
+        if (this.activeSource) {
+          try {
+            this.activeSource.stop();
+            this.activeSource.disconnect();
+          } catch (e) {}
+          this.activeSource = null;
+        }
+        this.currentType = null;
+        const indicator = document.getElementById('audio-indicator');
+        if (indicator) {
+          indicator.textContent = 'Muted';
+          indicator.className = 'text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500';
+        }
+        document.querySelectorAll('.sound-btn').forEach(btn => btn.classList.remove('border-brand-500', 'bg-brand-50'));
+      },
+
+      playBrownNoise() {
+        const bufferSize = this.ctx.sampleRate * 2;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (lastOut + (0.02 * white)) / 1.02;
+          lastOut = output[i];
+          output[i] *= 3.5; // Gain compensation
+        }
+        const whiteNoise = this.ctx.createBufferSource();
+        whiteNoise.buffer = buffer;
+        whiteNoise.loop = true;
+        whiteNoise.connect(this.gainNode);
+        whiteNoise.start();
+        this.activeSource = whiteNoise;
+      },
+
+      playPinkNoise() {
+        const bufferSize = this.ctx.sampleRate * 2;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+          output[i] *= 0.11;
+          b6 = white * 0.115926;
+        }
+        const pinkSource = this.ctx.createBufferSource();
+        pinkSource.buffer = buffer;
+        pinkSource.loop = true;
+        pinkSource.connect(this.gainNode);
+        pinkSource.start();
+        this.activeSource = pinkSource;
+      },
+
+      playBinauralTone(freq) {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.connect(this.gainNode);
+        osc.start();
+        this.activeSource = osc;
+      },
+
+      playChime() {
+        this.initContext();
+        const osc = this.ctx.createOscillator();
+        const chimeGain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(528, this.ctx.currentTime);
+        chimeGain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+        chimeGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.5);
+        osc.connect(chimeGain);
+        chimeGain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 1.5);
+      }
+    };
+
+    // --- APPLICATION BOOTSTRAP ---
+    window.addEventListener('DOMContentLoaded', () => {
+      app.init();
+      // Initialize Google Identity Services if client ID exists
+      setTimeout(() => {
+        driveBackup.initGis();
+      }, 500);
+    });
+  </script>
+</body>
+</html>
